@@ -257,7 +257,6 @@ int main(){
                     refresh();
                     strncpy(nombre_archivo, archivo_to, sizeof(nombre_archivo) - 1);
                     nombre_archivo[sizeof(nombre_archivo) - 1] = '\0';
-
                     PC = 0;
                     ejecuta = true;
                     break;
