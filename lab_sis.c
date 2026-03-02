@@ -1,3 +1,7 @@
+// git add lab_sis.c
+// git commit -m "comentarios"
+// git push -u
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -169,6 +173,87 @@ int INC_DEC(char inst_to[], char reg_to[]){
     return 0;
 }
 
+void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){
+
+    char cad[50];
+	char *comando = cad; 
+	char *token_comandos;
+    char comando_to[10];
+    char archivo_to[50];
+    int fila = 2;
+
+    while(*cortar == false){    
+
+        comando_to[0] = '\0';
+        archivo_to[0] = '\0';
+        cad[0] = '\0';
+        nombre_archivo[0] = '\0';
+
+        if(kbhit()){
+            move(10,0);
+            clrtoeol();
+            move(9,0);
+            clrtoeol();
+            refresh();
+            mvscanw(10,4,"%49[^\n]",cad);
+        }
+        else {
+            cad[0] = '\0';
+        }
+        comando = cad;
+
+        token_comandos = strsep(&comando, " ");
+        if(token_comandos != NULL){
+            strncpy(comando_to, token_comandos, sizeof(comando_to) - 1);
+            comando_to[sizeof(comando_to) - 1] = '\0';
+            
+        }
+
+        token_comandos = strsep(&comando, "\n");
+        if(token_comandos != NULL){
+            strncpy(archivo_to, token_comandos, sizeof(archivo_to) - 1);
+            archivo_to[sizeof(archivo_to) - 1] = '\0';
+        }
+        
+        if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
+            *salir = true;
+            break;
+        }
+        else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0')){
+            move(5,0);
+            clrtoeol();
+            move(fila,0);
+            clrtoeol();
+            refresh();
+            strncpy(nombre_archivo, archivo_to, tam_arch - 1);
+            nombre_archivo[tam_arch - 1] = '\0';
+            PC = 0;
+            *ejecuta = true;
+            if(num_ciclo == 2){
+                *salir = true;            
+            }
+            break;
+        }
+        else if (comando_to[0] != '\0'){
+            mvprintw(5,4, "Error, comando de terminal no valido");
+            refresh();
+            continue;
+        }
+        if(num_ciclo == 1){
+            if(comando_to[0] == '\0'){
+                continue;
+            }
+        }
+        if(num_ciclo == 2){
+            if(end == true){
+                continue;
+            }
+        }
+        *cortar = true;
+    }
+
+} 
+
 
 int main(){
 
@@ -183,11 +268,11 @@ int main(){
     bool espacio = false;
     char nombre_archivo[50];
 
-	char cad[50];
-	char *comando = cad; 
-	char *token_comandos;
-    char comando_to[10];
-    char archivo_to[50];
+	//char cad[50];
+	//char *comando = cad; 
+	//char *token_comandos;
+    //char comando_to[10];
+    //char archivo_to[50];
     int fila = 2;
     bool salir = false; 
     bool ejecuta = false;
@@ -205,72 +290,13 @@ int main(){
         error_archivo = false;
         coma = false;
         espacio = false;
+        
+        mvprintw(0,4," ");
+        refresh();
 
-        
-        
         if(ejecuta == false){
-            while(cortar == false){    
 
-                comando_to[0] = '\0';
-                archivo_to[0] = '\0';
-                cad[0] = '\0';
-                nombre_archivo[0] = '\0';
-
-                mvprintw(0,4," ");
-                refresh();
-
-                if(kbhit()){
-                    move(10,0);
-                    clrtoeol();
-                    move(9,0);
-                    clrtoeol();
-                    refresh();
-                    mvscanw(10,4,"%49[^\n]",cad);
-                }
-                else {
-                    cad[0] = '\0';
-                }
-                comando = cad;
-
-                token_comandos = strsep(&comando, " ");
-                if(token_comandos != NULL){
-                    strncpy(comando_to, token_comandos, sizeof(comando_to) - 1);
-                    comando_to[sizeof(comando_to) - 1] = '\0';
-                    
-                }
-
-                token_comandos = strsep(&comando, "\n");
-                if(token_comandos != NULL){
-                    strncpy(archivo_to, token_comandos, sizeof(archivo_to) - 1);
-                    archivo_to[sizeof(archivo_to) - 1] = '\0';
-                }
-                
-                if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
-                    salir = true;
-                    break;
-                }
-                else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0')){
-                    move(5,0);
-                    clrtoeol();
-                    move(fila,0);
-                    clrtoeol();
-                    refresh();
-                    strncpy(nombre_archivo, archivo_to, sizeof(nombre_archivo) - 1);
-                    nombre_archivo[sizeof(nombre_archivo) - 1] = '\0';
-                    PC = 0;
-                    ejecuta = true;
-                    break;
-                }
-                else if (comando_to[0] != '\0'){
-                    mvprintw(5,4, "Error, comando de terminal no valido");
-                    refresh();
-                    continue;
-                }
-                if(comando_to[0] == '\0'){
-                    continue;
-                }
-                cortar = true;
-            }
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
             if(salir == true){
                 continue;
             }
@@ -409,65 +435,8 @@ int main(){
             coma = false; 
             espacio = false;
 
-            while(cortar == false){    
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2);
 
-                comando_to[0] = '\0';
-                archivo_to[0] = '\0';
-                cad[0] = '\0';
-
-                if(kbhit()){
-                    move(10,0);
-                    clrtoeol();
-                    move(9,0);
-                    clrtoeol();
-                    refresh();
-                    mvscanw(10,4,"%49[^\n]",cad);
-                }
-                else {
-                    cad[0] = '\0';
-                }
-                comando = cad;
-
-                token_comandos = strsep(&comando, " ");
-                if(token_comandos != NULL){
-                    strncpy(comando_to, token_comandos, sizeof(comando_to) - 1);
-                    comando_to[sizeof(comando_to) - 1] = '\0';
-                }
-
-                token_comandos = strsep(&comando, "\n");
-                if(token_comandos != NULL){
-                    strncpy(archivo_to, token_comandos, sizeof(archivo_to) - 1);
-                    archivo_to[sizeof(archivo_to) - 1] = '\0';
-                }
-                
-                if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
-                    salir = true;
-                    break;
-                }
-                else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0')){
-                    move(5,0);
-                    clrtoeol();
-                    move(fila,0);
-                    clrtoeol();
-                    refresh();
-                    strncpy(nombre_archivo, archivo_to, sizeof(nombre_archivo) - 1);
-                    nombre_archivo[sizeof(nombre_archivo) - 1] = '\0';
-                    
-                    PC = 0;
-                    ejecuta = true;
-                    salir = true;
-                    break;
-                }
-                else if(comando_to[0] != '\0'){
-                    mvprintw(5,4, "Error, comando de terminal no valido");
-                    refresh();
-                    continue;
-                }
-                if(end == true){
-                    continue;
-                }
-                cortar = true;
-            }
             end = false;
             cortar = false;
             
