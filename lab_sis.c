@@ -36,15 +36,15 @@ int cerrarArch_error(int num){
             refresh();
             break;
         case 2:
-            mvprintw(5,4,"%d\tlinea invalida debido a un argumento nulo (revisa sintaxis)\n", PC);//
+            mvprintw(5,4,"%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)\n", PC);//
             refresh();
             break;
         case 3:
-            mvprintw(5,4,"%d\ttercer argumento invalido, no es un numero ni un registro\n", PC);//
+            mvprintw(5,4,"%d\ttercer argumento invalido, (revisa sintaxix)\n", PC);//
             refresh();
             break;
         case 4:
-            mvprintw(5,4,"%d\tel segundo token no corresponde a un registro valido\n", PC); //
+            mvprintw(5,4,"%d\tel segundo argumento no corresponde a un registro valido\n", PC); //
             refresh();
             break;
         case 5:
@@ -60,11 +60,11 @@ int cerrarArch_error(int num){
             refresh();
             break;
         case 8:
-            mvprintw(5,4,"%d\tdemasiados argumentos en sentencia END o espacio al final (revisa sintaxis)\n", PC);
+            mvprintw(5,4,"%d\tdemasiados argumentos en sentencia END\n", PC);//
             refresh();
             break;
         case 9:
-            mvprintw(5,4,"%d\tsintaxis incorrecta en sentencias INC o DEC\n", PC);
+            mvprintw(5,4,"%d\tsintaxis incorrecta en sentencias INC o DEC\n", PC);//
             refresh();
             break;
     }
@@ -360,13 +360,13 @@ int main(){
                 rv_to[sizeof(rv_to) - 1] = '\0';
             }
         
-            token = strsep(&st, "\n");
+            /*token = strsep(&st, "\n");
             if (token != NULL ) {
                 cerrarArch_error(1);
                 error_archivo = true;
                 break;
                 //return 1;
-            }
+            }*/
                 
             if((strcmp(inst_to,"MOV") == 0) || (strcmp(inst_to,"ADD") == 0) || (strcmp(inst_to,"SUB") == 0)|| (strcmp(inst_to,"MUL") == 0) || (strcmp(inst_to,"DIV") == 0)){
                 if((reg_to[0] != '\0') && (rv_to[0] != '\0')){
