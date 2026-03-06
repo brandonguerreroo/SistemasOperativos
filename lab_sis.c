@@ -268,11 +268,6 @@ int main(){
     bool espacio = false;
     char nombre_archivo[50];
 
-	//char cad[50];
-	//char *comando = cad; 
-	//char *token_comandos;
-    //char comando_to[10];
-    //char archivo_to[50];
     int fila = 2;
     bool salir = false; 
     bool ejecuta = false;
@@ -359,14 +354,6 @@ int main(){
                 strncpy(rv_to, token, sizeof(rv_to) - 1);
                 rv_to[sizeof(rv_to) - 1] = '\0';
             }
-        
-            /*token = strsep(&st, "\n");
-            if (token != NULL ) {
-                cerrarArch_error(1);
-                error_archivo = true;
-                break;
-                //return 1;
-            }*/
                 
             if((strcmp(inst_to,"MOV") == 0) || (strcmp(inst_to,"ADD") == 0) || (strcmp(inst_to,"SUB") == 0)|| (strcmp(inst_to,"MUL") == 0) || (strcmp(inst_to,"DIV") == 0)){
                 if((reg_to[0] != '\0') && (rv_to[0] != '\0')){
