@@ -329,7 +329,7 @@ int main(){
             mvprintw(fila,4,"%d",PC);
             refresh();
         
-            linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
+            linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe 
 
             mvprintw(fila,16,"%s",linea);
             refresh();
