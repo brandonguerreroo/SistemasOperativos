@@ -71,8 +71,8 @@ int cerrarArch_error(int num){
     
     return 0;
 }
-
-int* obtener_registro(char *reg){
+// Recibe un string con el nombre del registro y devuelve un puntero al registro correspondiente, si no se encuentra el registro devuelve NULL
+int *obtener_registro(char *reg){
     if(strcmp(reg,"EAX") == 0){ 
         return &EAX;
     }
@@ -110,13 +110,12 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
     else{
         for(int i = 0; i < len; i++){   
             if (rv_to[i] < '0' || rv_to[i] > '9') {
-                
                 caracter = true;
                 if(i == 0){
-                    if(rv_to[i] == '-')
+                    if(rv_to[i] == '-'){
                     caracter = false;
+                    }
                 }
-                
             }
         }
         if(caracter){
@@ -126,7 +125,6 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         else{
             valor = atoi(rv_to);
         }
-
     }
 
     if(strcmp(inst_to,"MOV") == 0){
@@ -197,7 +195,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             refresh();
             mvscanw(10,4,"%49[^\n]",cad);
         }
-        else {
+        else{
             cad[0] = '\0';
         }
         comando = cad;
@@ -229,6 +227,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             nombre_archivo[tam_arch - 1] = '\0';
             PC = 0;
             *ejecuta = true;
+
             if(num_ciclo == 2){
                 *salir = true;            
             }
@@ -254,7 +253,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
 
 } 
 
-
 int main(){
 
     char linea[64];
@@ -267,18 +265,11 @@ int main(){
     bool coma = false;
     bool espacio = false;
     char nombre_archivo[50];
-
-	//char cad[50];
-	//char *comando = cad; 
-	//char *token_comandos;
-    //char comando_to[10];
-    //char archivo_to[50];
     int fila = 2;
-    bool salir = false; 
+    bool salir = false;
     bool ejecuta = false;
     bool cortar = false;
     bool error_archivo = false;
-    
     
     initscr();
     while (salir == false){
@@ -295,7 +286,6 @@ int main(){
         refresh();
 
         if(ejecuta == false){
-
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
             if(salir == true){
                 continue;
@@ -311,7 +301,6 @@ int main(){
             mvprintw(5,4,"ERROR: archivo no encontrado.");
             refresh();
             continue;
-            
         }
         
         mvprintw(1,4,"PC\t\tIR\t\tEAX\tEBX\tECX\tEDX");
@@ -329,7 +318,7 @@ int main(){
             mvprintw(fila,4,"%d",PC);
             refresh();
         
-            linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe 
+            linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
 
             mvprintw(fila,16,"%s",linea);
             refresh();
@@ -359,19 +348,10 @@ int main(){
                 strncpy(rv_to, token, sizeof(rv_to) - 1);
                 rv_to[sizeof(rv_to) - 1] = '\0';
             }
-        
-            /*token = strsep(&st, "\n");
-            if (token != NULL ) {
-                cerrarArch_error(1);
-                error_archivo = true;
-                break;
-                //return 1;
-            }*/
                 
             if((strcmp(inst_to,"MOV") == 0) || (strcmp(inst_to,"ADD") == 0) || (strcmp(inst_to,"SUB") == 0)|| (strcmp(inst_to,"MUL") == 0) || (strcmp(inst_to,"DIV") == 0)){
                 if((reg_to[0] != '\0') && (rv_to[0] != '\0')){
                     if( MOV_ADD_SUB_MUL_DIV(inst_to,reg_to, rv_to) != 0){
-                        //return 1;
                         error_archivo = true;
                         break;
                     }
@@ -380,14 +360,12 @@ int main(){
                     cerrarArch_error(2);
                     error_archivo = true;
                     break;
-                    //return 1;
                 }
             }
             else if( (strcmp(inst_to,"INC") == 0) || (strcmp(inst_to,"DEC") == 0) ){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){
                     
                     if( INC_DEC(inst_to,reg_to) != 0){
-                        //return 1;
                         error_archivo = true;
                         break;
                     }
@@ -396,16 +374,10 @@ int main(){
                     cerrarArch_error(9);
                     error_archivo = true;
                     break;
-                    //return 1;
-                }
-                
+                }       
             }
             else if(strcmp(inst_to,"END") == 0){
-                
                 end = true;
-                //mvprintw(9,4,"Archivo terminado");
-                //refresh();
-                
                 if((reg_to[0] != '\0') || (rv_to[0] != '\0') || (espacio == true)){
                     cerrarArch_error(8);
                     error_archivo = true;
@@ -439,7 +411,6 @@ int main(){
 
             end = false;
             cortar = false;
-            
         }
         cerrarArch_error(0);
         if(ejecuta){
@@ -451,10 +422,8 @@ int main(){
         }
 
         if(end == false && error_archivo == false){ 
-        
             cerrarArch_error(5);
             continue;
-
         }
     }
     endwin();
