@@ -2,34 +2,39 @@
 #include <string.h>
 #include <stdlib.h>
 
-struct PCB {
+typedef struct PCB {
     int PID;
     char nombre_proceso[50];
     int PC;
-    int estado;
     char IR[64];
     int EAX,EBX,ECX,EDX;
     struct PCB *sig;
-};
+}PCB;
 
-struct PCB *crear_nodo(int pid, char np[]){
+PCB crear_nodo(int pid, char nombre_proceso[], int PC, char IR[], int EAX, int EBX, int ECX, int EDX){
 
-    struct PCB *nuevo = malloc(sizeof(struct PCB));
+    PCB *nuevo = malloc(sizeof(struct PCB));
     nuevo->PID = pid;
-    strcpy(nuevo->nombre_proceso, "hola.txt");
+    strcpy(nuevo->nombre_proceso, nombre_proceso); //Cambiar por strncpy
+    nuevo->PC = PC;
+    strcpy(nuevo->IR, IR); //Cambiar por strncpy
+    nuevo->EAX = EAX;
+    nuevo->EBX = EBX;
+    nuevo->ECX = ECX;
+    nuevo->EDX = EDX;
+    
     nuevo->sig = NULL; //el sig del nodo nuevo debe apuntar a nulo porque lo vamos a insertar al final
-
-    return nuevo;
+    //return nuevo;
 }
 
-void insertar(struct PCB **lista, struct PCB *nuevo){
+void insertar(PCB *lista, PCB *nuevo){
 
-    if(*lista == NULL){
+    /*if(*lista == NULL){
         *lista = nuevo; //la cabeza debe apuntar al nodo nuevo unicamente si la lista estaba vacia.
         return;
-    }
+    }*/
     
-    struct PCB *temp = *lista; //para insertar otro nodo creamos un temp que igualmente apunte a la cabeza de la lista
+    PCB *temp = lista; //para insertar otro nodo creamos un temp que igualmente apunte a la cabeza de la lista
     
     while(temp->sig != NULL){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
         temp = temp->sig;
@@ -38,35 +43,38 @@ void insertar(struct PCB **lista, struct PCB *nuevo){
 
 }
 
-void imprimir(struct PCB **lista){
+void imprimir(PCB *lista){
 
-    if(*lista != NULL){
+    //if(lista != NULL){
 
-        struct PCB *temp = *lista; //para imprimir nodos creamos un temp que apunte a la cabeza de la lista
+        PCB *temp = lista; //para imprimir nodos creamos un temp que apunte a la cabeza de la lista
         
         while(1){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
-            printf("%d\t%s\n",temp->PID,temp->nombre_proceso);
+            printf("%d\t%s\t%d\t%s\t%d\t%d\t%d\t%d\n",temp->PID,temp->nombre_proceso, temp->PC, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
             if(temp->sig == NULL){
                 break;
             }
             temp = temp->sig;
         }
         
-    }
+    //}
 }
-
-
 int main() {
-    struct PCB *listos = NULL; //cabeza
-    struct PCB *ejecucion = NULL;
-    struct PCB *terminados = NULL;
+    char nombre_proceso[50];
+    PCB listos; 
+    PCB ejecucion;
+    PCB terminados;
+
+    //FILE *arc_instrucciones = fopen("hola.txt","r");
 
     for(int i = 0; i < 6 ; i++){
-        struct PCB *nuevo = crear_nodo(i,"hola.txt");
-        insertar(&listos, nuevo);
+        printf("Ingrese el nombre del proceso: \n");
+        scanf("%s", nombre_proceso);
+        PCB nuevo = crear_nodo(i,nombre_proceso,0,0,0,0,0,0);
+        insertar(&listos, &nuevo);
+        imprimir(&listos);
     }
 
-    imprimir(&listos);
-
+    //imprimir(&listos);
     return 0;
 }
