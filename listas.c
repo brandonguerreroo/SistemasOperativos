@@ -40,28 +40,40 @@ void insertar(PCB *lista, PCB *nuevo){
 }
 
 void imprimir(PCB *lista){
-
-        PCB *temp = lista; //para imprimir nodos creamos un temp que apunte a la cabeza de la lista
-        while(temp->sig != NULL){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
-            temp = temp->sig;
-            printf("%d\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\n",temp->PID,temp->nombre_proceso, temp->PC, temp->estado, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
-        }
+    PCB *temp = lista; //para imprimir nodos creamos un temp que apunte a la cabeza de la lista
+    while(temp->sig != NULL){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
+        temp = temp->sig;
+        printf("%d\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\n",temp->PID,temp->nombre_proceso, temp->PC, temp->estado, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+    }
 }
+
+PCB *sacarFrente(PCB *lista){   
+    PCB *temp = malloc(sizeof(PCB));
+    temp = lista->sig;
+    lista->sig = temp->sig;
+    temp->sig=NULL;
+    return temp;
+}   
+
 int main() {
     char nombre_proceso[50];
     PCB listos; //cabeza
-    //struct PCB *ejecucion = NULL;
+    PCB ejecucion;
     //struct PCB *terminados = NULL;
 
     //FILE *arc_instrucciones = fopen("hola.txt","r");
-    for(int i = 1; i <= 6 ; i++){
+    for(int i = 1; i <= 4 ; i++){
         printf("Ingrese el nombre del proceso: \n");
         scanf("%s", nombre_proceso);
         PCB *nuevo = crear_nodo(i,nombre_proceso,0,"MOV",0,0,0,0);
         insertar(&listos, nuevo);
         imprimir(&listos);
     }
+        PCB *meterEjecucion = sacarFrente(&listos);  
+        insertar(&ejecucion, meterEjecucion);
+        printf("\n");
+        imprimir(&ejecucion);
 
     //imprimir(&listos);
     return 0;
-}
+}        
