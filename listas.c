@@ -47,7 +47,11 @@ void imprimir(PCB *lista){
     }
 }
 
-PCB *sacarFrente(PCB *lista){   
+PCB *sacarFrente(PCB *lista){
+    if(lista->sig == NULL)
+    {
+        return NULL;
+    }
     PCB *temp = malloc(sizeof(PCB));
     temp = lista->sig;
     lista->sig = temp->sig;
@@ -55,25 +59,56 @@ PCB *sacarFrente(PCB *lista){
     return temp;
 }   
 
+PCB *buscar_sacar(PCB *lista, int numeroPID)
+{
+    if(lista->sig == NULL)
+    {
+        return NULL;
+    }
+    PCB *temp1 = lista;
+    PCB *temp2 = lista->sig;
+    while(temp1->sig != NULL){
+        if(temp2->PID == numeroPID)
+        {
+            temp1->sig = temp2->sig;
+            temp2->sig = NULL;
+            return temp2;
+        }
+        temp1 = temp1->sig;
+        temp2 = temp2->sig;
+    }
+    return NULL;
+}
+
 int main() {
     char nombre_proceso[50];
+    int numeroPID = 0;
     PCB listos; //cabeza
     PCB ejecucion;
-    //struct PCB *terminados = NULL;
+    PCB terminados;
+    listos.sig = NULL;
+    ejecucion.sig = NULL;
+    terminados.sig = NULL;
 
-    //FILE *arc_instrucciones = fopen("hola.txt","r");
     for(int i = 1; i <= 4 ; i++){
         printf("Ingrese el nombre del proceso: \n");
         scanf("%s", nombre_proceso);
         PCB *nuevo = crear_nodo(i,nombre_proceso,0,"MOV",0,0,0,0);
         insertar(&listos, nuevo);
         imprimir(&listos);
-    }
-        PCB *meterEjecucion = sacarFrente(&listos);  
-        insertar(&ejecucion, meterEjecucion);
-        printf("\n");
-        imprimir(&ejecucion);
-
-    //imprimir(&listos);
+    }   
+    PCB *meterEjecucion = sacarFrente(&listos);
+    insertar(&ejecucion, meterEjecucion);
+    printf("******************************LISTOS******************************\n");
+    imprimir(&listos);
+    printf("Ingrese un numero PID\n");
+    scanf("%d", &numeroPID);
+    PCB *procesoSacado = buscar_sacar(&listos, numeroPID);
+        insertar(&terminados, procesoSacado);
+        printf("******************************LISTOS******************************\n");
+        imprimir(&listos);
+        printf("******************************TERMINADOS**************************\n");
+        imprimir(&terminados);
+    
     return 0;
 }        
