@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct PCB {
     int PID;
@@ -59,7 +60,9 @@ PCB *sacarFrente(PCB *lista){
     return temp;
 }   
 
-PCB *buscar_sacar(PCB *lista, int num_PID){  
+PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){  
+    //si la condicion esta en 1 busca y regresa si lo encuentra
+    //si no busca y desenlaza si lo encuentra
     
     if(lista->sig == NULL){
         return NULL;
@@ -70,6 +73,9 @@ PCB *buscar_sacar(PCB *lista, int num_PID){
 
     while(temp1->sig != NULL){
         if(temp2->PID == num_PID){
+            if(condicion == 1){
+                return temp2;
+            }
             temp1->sig = temp2->sig;
             temp2->sig = NULL;
             return temp2;
@@ -84,13 +90,13 @@ PCB *buscar_sacar(PCB *lista, int num_PID){
 
 void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
     PCB *matar;
-    if((matar = buscar_sacar(lista_listos, num_PID)) != NULL){
+    if((matar = buscar_sacar(lista_listos, num_PID, 0)) != NULL){
         insertar(lista_terminados, matar);
     }
-    else if((matar = buscar_sacar(lista_ejecucion, num_PID)) != NULL){
+    else if((matar = buscar_sacar(lista_ejecucion, num_PID, 0)) != NULL){
         insertar(lista_terminados, matar);
     }
-    else if((matar = buscar_sacar(lista_terminados, num_PID)) != NULL){
+    else if((matar = buscar_sacar(lista_terminados, num_PID, 1)) != NULL){
         printf("\nEste proceso ya esta terminado\n");
     }
     else{
@@ -103,7 +109,7 @@ int main() {
     PCB listos; //cabeza
     PCB ejecucion;
     PCB terminados;
-    int num_PID = 5;
+    int num_PID = 4;
 
     listos.sig = NULL;
     ejecucion.sig = NULL;
@@ -116,22 +122,27 @@ int main() {
         PCB *nuevo = crear_nodo(i,nombre_proceso,0,"MOV",0,0,0,0);
         insertar(&listos, nuevo);
     }
+    printf("LISTOS\n");
     imprimir(&listos);
 
     PCB *meterEjecucion = sacarFrente(&listos);  
     insertar(&ejecucion, meterEjecucion);
-    printf("\n");
+    printf("LISTOS\n");
     imprimir(&listos);
-    printf("\n");
+    printf("EJECUCION\n");
     imprimir(&ejecucion);
 
     matar(&listos, &ejecucion, &terminados, num_PID);
 
-    printf("\n");
+    printf("LISTOS\n");
     imprimir(&listos);
-    printf("\n");
+    printf("EJECUCION\n");
     imprimir(&ejecucion);
-    printf("\n");
+    printf("TERMINADOS\n");
+    imprimir(&terminados);
+
+    matar(&listos, &ejecucion, &terminados, 4);
+    printf("TERMINADOS\n");
     imprimir(&terminados);
 
     //imprimir(&listos);
