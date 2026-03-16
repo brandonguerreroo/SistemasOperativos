@@ -9,6 +9,7 @@
 #include <curses.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "LISTAS.h"
 
 FILE *arc_instrucciones;
 int EAX = 0; 
@@ -16,6 +17,11 @@ int EBX = 0;
 int ECX = 0; 
 int EDX = 0; 
 int PC = 0;
+int PID = 0;
+
+PCB listos;
+PCB ejecucion;
+PCB terminados;
 
 int kbhit(void);
 
@@ -171,7 +177,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     return 0;
 }
 
-void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){
+void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo, char linea[]){ //cambios
 
     char cad[50];
 	char *comando = cad; 
@@ -185,7 +191,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         comando_to[0] = '\0';
         archivo_to[0] = '\0';
         cad[0] = '\0';
-        nombre_archivo[0] = '\0';
+        nombre_archivo[0] = '\0'; /////checar
 
         if(kbhit()){
             move(10,0);
@@ -199,7 +205,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             cad[0] = '\0';
         }
         comando = cad;
-
         token_comandos = strsep(&comando, " ");
         if(token_comandos != NULL){
             strncpy(comando_to, token_comandos, sizeof(comando_to) - 1);
@@ -214,6 +219,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         
         if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
+            *ejecuta = false; //cambios
             *salir = true;
             break;
         }
@@ -223,14 +229,18 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             move(fila,0);
             clrtoeol();
             refresh();
+            
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            PC = 0;
+            PID++; //cambios
+            PCB *nuevo = crear_nodo(PID,nombre_archivo,PC,linea,0,0,0,0); //cambios  ////checar lo de linea
+            insertar(&listos, nuevo); //cambios
+            //imprimir(&listos);
             *ejecuta = true;
 
-            if(num_ciclo == 2){
+            /*if(num_ciclo == 2){ // cambios
                 *salir = true;            
-            }
+            }*/
             break;
         }
         else if (comando_to[0] != '\0'){
@@ -238,19 +248,26 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             refresh();
             continue;
         }
-        if(num_ciclo == 1){
-            if(comando_to[0] == '\0'){
+        if(num_ciclo == 1){  
+            if(listos.sig != NULL){  
+                //mvprintw(5,4, "Entro 1");          
+                break;
+            }
+            else if(comando_to[0] == '\0'){
                 continue;
             }
         }
         if(num_ciclo == 2){
-            if(end == true){
+            if(listos.sig != NULL && end == true){ //cambios
+                *ejecuta = true;
+                break;
+            }
+            else if(end == true){
                 continue;
             }
         }
         *cortar = true;
     }
-
 } 
 
 int main(){
@@ -270,6 +287,10 @@ int main(){
     bool ejecuta = false;
     bool cortar = false;
     bool error_archivo = false;
+
+    listos.sig = NULL;
+    ejecucion.sig = NULL;
+    terminados.sig = NULL;
     
     initscr();
     while (salir == false){
@@ -286,7 +307,7 @@ int main(){
         refresh();
 
         if(ejecuta == false){
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1, linea); //cambios
             if(salir == true){
                 continue;
             }
@@ -295,7 +316,14 @@ int main(){
         }
         ejecuta = false;
 
-        arc_instrucciones = fopen(nombre_archivo, "r");
+        if(ejecucion.sig == NULL){ //cambios
+            PCB *meterEjecucion = sacarFrente(&listos);  //cambios
+            insertar(&ejecucion, meterEjecucion); //cambios
+        }
+        
+        PCB *archivo = ejecucion.sig; //cambios
+        PC = 0;  
+        arc_instrucciones = fopen(archivo->nombre_proceso, "r"); //cambios
 
         if (arc_instrucciones == NULL){
             mvprintw(5,4,"ERROR: archivo no encontrado.");
@@ -384,11 +412,16 @@ int main(){
                     break;
                 }
                 else{
+                    //mvprintw(5,4, "Se saco un proceso");            
+                    PCB *meterTerminados = sacarFrente(&ejecucion);  //cambios
+                    insertar(&terminados, meterTerminados); //cambios
                     mvprintw(9,4,"Archivo terminado");
                     refresh();
                 }
             }
             else{
+                PCB *meterTerminados = sacarFrente(&ejecucion);  //cambios
+                insertar(&terminados, meterTerminados);
                 cerrarArch_error(7);
                 error_archivo = true;
                 break;
@@ -402,12 +435,12 @@ int main(){
             refresh();
             mvprintw(fila,56,"%d",EDX);
             refresh();
-            usleep(50000);
+            usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
 
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2);
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2, linea); // cambios
 
             end = false;
             cortar = false;
@@ -422,7 +455,7 @@ int main(){
         }
 
         if(end == false && error_archivo == false){ 
-            cerrarArch_error(5);
+            cerrarArch_error(5);  ///////checar
             continue;
         }
     }
