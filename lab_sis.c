@@ -9,6 +9,7 @@
 #include <curses.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "LISTAS.h"
 
 FILE *arc_instrucciones;
 int EAX = 0; 
@@ -16,6 +17,11 @@ int EBX = 0;
 int ECX = 0; 
 int EDX = 0; 
 int PC = 0;
+int PID = 0;
+
+PCB listos;
+PCB ejecucion;
+PCB terminados;
 
 int kbhit(void);
 
@@ -40,7 +46,7 @@ int cerrarArch_error(int num){
             refresh();
             break;
         case 3:
-            mvprintw(5,4,"%d\ttercer argumento invalido, (revisa sintaxix)\n", PC);//
+            mvprintw(5,4,"%d\ttercer argumento invalido, revisa sintaxis\n", PC);//
             refresh();
             break;
         case 4:
@@ -60,19 +66,19 @@ int cerrarArch_error(int num){
             refresh();
             break;
         case 8:
-            mvprintw(5,4,"%d\tdemasiados argumentos en sentencia END\n", PC);//
+            mvprintw(5,4,"%d\tdemasiados argumentos en sentencia END\n", PC);
             refresh();
             break;
         case 9:
-            mvprintw(5,4,"%d\tsintaxis incorrecta en sentencias INC o DEC\n", PC);//
+            mvprintw(5,4,"%d\tsintaxis incorrecta en sentencias INC o DEC\n", PC);
             refresh();
             break;
     }
     
     return 0;
 }
-
-int* obtener_registro(char *reg){
+// Recibe un string con el nombre del registro y devuelve un puntero al registro correspondiente, si no se encuentra el registro devuelve NULL
+int *obtener_registro(char *reg){
     if(strcmp(reg,"EAX") == 0){ 
         return &EAX;
     }
@@ -110,13 +116,12 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
     else{
         for(int i = 0; i < len; i++){   
             if (rv_to[i] < '0' || rv_to[i] > '9') {
-                
                 caracter = true;
                 if(i == 0){
-                    if(rv_to[i] == '-')
+                    if(rv_to[i] == '-'){
                     caracter = false;
+                    }
                 }
-                
             }
         }
         if(caracter){
@@ -126,7 +131,6 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         else{
             valor = atoi(rv_to);
         }
-
     }
 
     if(strcmp(inst_to,"MOV") == 0){
@@ -173,7 +177,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     return 0;
 }
 
-void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){
+void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo, char linea[]){ //cambios
 
     char cad[50];
 	char *comando = cad; 
@@ -187,7 +191,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         comando_to[0] = '\0';
         archivo_to[0] = '\0';
         cad[0] = '\0';
-        nombre_archivo[0] = '\0';
+        nombre_archivo[0] = '\0'; /////checar
 
         if(kbhit()){
             move(10,0);
@@ -197,11 +201,10 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             refresh();
             mvscanw(10,4,"%49[^\n]",cad);
         }
-        else {
+        else{
             cad[0] = '\0';
         }
         comando = cad;
-
         token_comandos = strsep(&comando, " ");
         if(token_comandos != NULL){
             strncpy(comando_to, token_comandos, sizeof(comando_to) - 1);
@@ -216,6 +219,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         
         if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
+            *ejecuta = false; //cambios
             *salir = true;
             break;
         }
@@ -225,13 +229,18 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             move(fila,0);
             clrtoeol();
             refresh();
+            
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            PC = 0;
+            PID++; //cambios
+            PCB *nuevo = crear_nodo(PID,nombre_archivo,PC,linea,0,0,0,0); //cambios  ////checar lo de linea
+            insertar(&listos, nuevo); //cambios
+            //imprimir(&listos);
             *ejecuta = true;
-            if(num_ciclo == 2){
+
+            /*if(num_ciclo == 2){ // cambios
                 *salir = true;            
-            }
+            }*/
             break;
         }
         else if (comando_to[0] != '\0'){
@@ -240,12 +249,21 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             continue;
         }
         if(num_ciclo == 1){
-            if(comando_to[0] == '\0'){
+            
+            if(listos.sig != NULL){  
+                //mvprintw(5,4, "Entro 1");          
+                break;
+            }
+            else if(comando_to[0] == '\0'){
                 continue;
             }
         }
         if(num_ciclo == 2){
-            if(end == true){
+            if(listos.sig != NULL && end == true){ //cambios
+                *ejecuta = true;
+                break;
+            }
+            else if(end == true){
                 continue;
             }
         }
@@ -267,11 +285,14 @@ int main(){
     bool espacio = false;
     char nombre_archivo[50];
     int fila = 2;
-    bool salir = false; 
+    bool salir = false;
     bool ejecuta = false;
     bool cortar = false;
     bool error_archivo = false;
-    
+
+    listos.sig = NULL;
+    ejecucion.sig = NULL;
+    terminados.sig = NULL;
     
     initscr();
     while (salir == false){
@@ -288,8 +309,7 @@ int main(){
         refresh();
 
         if(ejecuta == false){
-
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1, linea); //cambios
             if(salir == true){
                 continue;
             }
@@ -298,13 +318,19 @@ int main(){
         }
         ejecuta = false;
 
-        arc_instrucciones = fopen(nombre_archivo, "r");
+        if(ejecucion.sig == NULL){ //cambios
+            PCB *meterEjecucion = sacarFrente(&listos);  //cambios
+            insertar(&ejecucion, meterEjecucion); //cambios
+        }
+        
+        PCB *archivo = ejecucion.sig; //cambios
+        PC = 0;  
+        arc_instrucciones = fopen(archivo->nombre_proceso, "r"); //cambios
 
         if (arc_instrucciones == NULL){
             mvprintw(5,4,"ERROR: archivo no encontrado.");
             refresh();
             continue;
-            
         }
         
         mvprintw(1,4,"PC\t\tIR\t\tEAX\tEBX\tECX\tEDX");
@@ -378,19 +404,19 @@ int main(){
                     cerrarArch_error(9);
                     error_archivo = true;
                     break;
-                }
-                
+                }       
             }
             else if(strcmp(inst_to,"END") == 0){
-                
                 end = true;
-                
                 if((reg_to[0] != '\0') || (rv_to[0] != '\0') || (espacio == true)){
                     cerrarArch_error(8);
                     error_archivo = true;
                     break;
                 }
                 else{
+                    //mvprintw(5,4, "Se saco un proceso");            
+                    PCB *meterTerminados = sacarFrente(&ejecucion);  //cambios
+                    insertar(&terminados, meterTerminados); //cambios
                     mvprintw(9,4,"Archivo terminado");
                     refresh();
                 }
@@ -409,16 +435,15 @@ int main(){
             refresh();
             mvprintw(fila,56,"%d",EDX);
             refresh();
-            usleep(50000);
+            usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
 
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2);
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2, linea); // cambios
 
             end = false;
             cortar = false;
-            
         }
         cerrarArch_error(0);
         if(ejecuta){
@@ -430,10 +455,8 @@ int main(){
         }
 
         if(end == false && error_archivo == false){ 
-        
-            cerrarArch_error(5);
+            cerrarArch_error(5);  ///////checar
             continue;
-
         }
     }
     endwin();
@@ -457,4 +480,3 @@ int kbhit(void) {
 
     return 0;
 }
-

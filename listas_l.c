@@ -1,17 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
-
-typedef struct PCB {
-    int PID;
-    char nombre_proceso[50];
-    int PC;
-    int estado;
-    char IR[64];
-    int EAX,EBX,ECX,EDX;
-    struct PCB *sig;
-}PCB;
+#include "LISTAS.h"
+#include <curses.h>
 
 PCB *crear_nodo(int pid, char nombre_proceso[], int PC, char IR[], int EAX, int EBX, int ECX, int EDX){
 
@@ -42,9 +33,11 @@ void insertar(PCB *lista, PCB *nuevo){
 
 void imprimir(PCB *lista){
     PCB *temp = lista; //para imprimir nodos creamos un temp que apunte a la cabeza de la lista
+    int num = 5;
     while(temp->sig != NULL){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
         temp = temp->sig;
-        printf("%d\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d\n",temp->PID,temp->nombre_proceso, temp->PC, temp->estado, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+        mvprintw(num,4, "%d\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d",temp->PID,temp->nombre_proceso, temp->PC, temp->estado, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+        num++;
     }
 }
 
@@ -104,7 +97,7 @@ void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int n
     }
 }
 
-int main() {
+/*int main() {
     char nombre_proceso[50];
     PCB listos; //cabeza
     PCB ejecucion;
@@ -147,4 +140,4 @@ int main() {
 
     //imprimir(&listos);
     return 0;
-}        
+}   */     

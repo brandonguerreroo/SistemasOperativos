@@ -1,4 +1,4 @@
-OBJS = lab_sis.c
+OBJS = lab_sis.c listas_l.c
 
 # Nombre del ejecutable
 TARGET = SO
