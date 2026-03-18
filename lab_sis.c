@@ -22,6 +22,7 @@ int PID = 0;
 PCB listos;
 PCB ejecucion;
 PCB terminados;
+int numLinea = 6;
 
 int kbhit(void);
 
@@ -358,7 +359,12 @@ int main(){
             refresh();
             continue;
         }
-        
+        move(6,0);
+        clrtoeol();
+        refresh();
+        imprimir(&ejecucion, 2, &numLinea);
+        imprimir(&listos, 1, &numLinea);
+        imprimir(&terminados, 3, &numLinea);
         mvprintw(1,4,"PC\t\tIR\t\tEAX\tEBX\tECX\tEDX");
         refresh();
 
@@ -446,8 +452,6 @@ int main(){
                 }
                 else{
                     meterEnTerminados(linea);
-                    mvprintw(9,4,"Archivo terminado");
-                    refresh();
                 }
             }
             else{
