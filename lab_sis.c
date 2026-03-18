@@ -288,6 +288,7 @@ int main(){
     bool cortar = false;
     bool error_archivo = false;
 
+    PCB *meterTerminados; 
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -380,11 +381,15 @@ int main(){
             if((strcmp(inst_to,"MOV") == 0) || (strcmp(inst_to,"ADD") == 0) || (strcmp(inst_to,"SUB") == 0)|| (strcmp(inst_to,"MUL") == 0) || (strcmp(inst_to,"DIV") == 0)){
                 if((reg_to[0] != '\0') && (rv_to[0] != '\0')){
                     if( MOV_ADD_SUB_MUL_DIV(inst_to,reg_to, rv_to) != 0){
+                        meterTerminados = sacarFrente(&ejecucion);  //cambios
+                        insertar(&terminados, meterTerminados);
                         error_archivo = true;
                         break;
                     }
                 }
                 else{
+                    meterTerminados = sacarFrente(&ejecucion);  //cambios
+                    insertar(&terminados, meterTerminados);
                     cerrarArch_error(2);
                     error_archivo = true;
                     break;
@@ -394,12 +399,16 @@ int main(){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){
                     
                     if( INC_DEC(inst_to,reg_to) != 0){
+                        meterTerminados = sacarFrente(&ejecucion);  //cambios
+                        insertar(&terminados, meterTerminados);
                         error_archivo = true;
                         break;
                     }
                 }
                 else{
                     cerrarArch_error(9);
+                    meterTerminados = sacarFrente(&ejecucion);  //cambios
+                    insertar(&terminados, meterTerminados);
                     error_archivo = true;
                     break;
                 }       
@@ -407,20 +416,22 @@ int main(){
             else if(strcmp(inst_to,"END") == 0){
                 end = true;
                 if((reg_to[0] != '\0') || (rv_to[0] != '\0') || (espacio == true)){
+                    meterTerminados = sacarFrente(&ejecucion);  //cambios
+                    insertar(&terminados, meterTerminados);
                     cerrarArch_error(8);
                     error_archivo = true;
                     break;
                 }
                 else{
                     //mvprintw(5,4, "Se saco un proceso");            
-                    PCB *meterTerminados = sacarFrente(&ejecucion);  //cambios
+                    meterTerminados = sacarFrente(&ejecucion);  //cambios
                     insertar(&terminados, meterTerminados); //cambios
                     mvprintw(9,4,"Archivo terminado");
                     refresh();
                 }
             }
             else{
-                PCB *meterTerminados = sacarFrente(&ejecucion);  //cambios
+                meterTerminados = sacarFrente(&ejecucion);  //cambios
                 insertar(&terminados, meterTerminados);
                 cerrarArch_error(7);
                 error_archivo = true;
@@ -445,7 +456,7 @@ int main(){
             end = false;
             cortar = false;
         }
-        cerrarArch_error(0);
+        cerrarArch_error(0); // Este cierra el archivo pero no necesariamente ya acabó.
         if(ejecuta){
             salir = false;
             continue;
@@ -454,7 +465,9 @@ int main(){
             continue;
         }
 
-        if(end == false && error_archivo == false){ 
+        if(end == false && error_archivo == false){
+            meterTerminados = sacarFrente(&ejecucion);  //cambios
+            insertar(&terminados, meterTerminados);
             cerrarArch_error(5);  ///////checar
             continue;
         }
