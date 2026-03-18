@@ -177,7 +177,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     return 0;
 }
 
-void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo, char linea[]){ //cambios
+void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){ //cambios
 
     char cad[50];
 	char *comando = cad; 
@@ -233,7 +233,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
             PID++; //cambios
-            PCB *nuevo = crear_nodo(PID,nombre_archivo,PC,linea,0,0,0,0); //cambios  ////checar lo de linea
+            PCB *nuevo = crear_nodo(PID,nombre_archivo,PC,"0",0,0,0,0); //cambios  ////checar lo de linea
             insertar(&listos, nuevo); //cambios
             //imprimir(&listos);
             *ejecuta = true;
@@ -268,8 +268,34 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         *cortar = true;
     }
-} 
+}
 
+
+void guardarContexto(PCB *nodo, char linea[])
+{
+    nodo->EAX = EAX;
+    nodo->EBX = EBX;
+    nodo->ECX = ECX;
+    nodo->EDX = EDX;
+    strncpy(nodo->IR,linea, sizeof(nodo->IR) - 1);
+    nodo->PC = PC;
+}
+void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
+{
+    EAX = nodo->EAX;
+    EBX = nodo->EBX;
+    ECX = nodo->ECX;
+    EDX = nodo->EDX;
+    strncpy(linea,nodo->IR, tam_linea - 1);
+    PC = nodo->PC;
+}
+
+void meterEnTerminados(char linea[]){
+    PCB *nodo; 
+    nodo = sacarFrente(&ejecucion); 
+    guardarContexto(nodo, linea);
+    insertar(&terminados, nodo);
+}
 int main(){
 
     char linea[64];
@@ -308,7 +334,7 @@ int main(){
         refresh();
 
         if(ejecuta == false){
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1, linea); //cambios
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); //cambios
             if(salir == true){
                 continue;
             }
@@ -328,6 +354,7 @@ int main(){
 
         if (arc_instrucciones == NULL){
             mvprintw(5,4,"ERROR: archivo no encontrado.");
+            meterEnTerminados(linea);
             refresh();
             continue;
         }
@@ -381,15 +408,13 @@ int main(){
             if((strcmp(inst_to,"MOV") == 0) || (strcmp(inst_to,"ADD") == 0) || (strcmp(inst_to,"SUB") == 0)|| (strcmp(inst_to,"MUL") == 0) || (strcmp(inst_to,"DIV") == 0)){
                 if((reg_to[0] != '\0') && (rv_to[0] != '\0')){
                     if( MOV_ADD_SUB_MUL_DIV(inst_to,reg_to, rv_to) != 0){
-                        meterTerminados = sacarFrente(&ejecucion);  //cambios
-                        insertar(&terminados, meterTerminados);
+                        meterEnTerminados(linea);
                         error_archivo = true;
                         break;
                     }
                 }
                 else{
-                    meterTerminados = sacarFrente(&ejecucion);  //cambios
-                    insertar(&terminados, meterTerminados);
+                    meterEnTerminados(linea);
                     cerrarArch_error(2);
                     error_archivo = true;
                     break;
@@ -399,16 +424,14 @@ int main(){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){
                     
                     if( INC_DEC(inst_to,reg_to) != 0){
-                        meterTerminados = sacarFrente(&ejecucion);  //cambios
-                        insertar(&terminados, meterTerminados);
+                        meterEnTerminados(linea);
                         error_archivo = true;
                         break;
                     }
                 }
                 else{
                     cerrarArch_error(9);
-                    meterTerminados = sacarFrente(&ejecucion);  //cambios
-                    insertar(&terminados, meterTerminados);
+                    meterEnTerminados(linea);
                     error_archivo = true;
                     break;
                 }       
@@ -416,23 +439,19 @@ int main(){
             else if(strcmp(inst_to,"END") == 0){
                 end = true;
                 if((reg_to[0] != '\0') || (rv_to[0] != '\0') || (espacio == true)){
-                    meterTerminados = sacarFrente(&ejecucion);  //cambios
-                    insertar(&terminados, meterTerminados);
+                    meterEnTerminados(linea);
                     cerrarArch_error(8);
                     error_archivo = true;
                     break;
                 }
                 else{
-                    //mvprintw(5,4, "Se saco un proceso");            
-                    meterTerminados = sacarFrente(&ejecucion);  //cambios
-                    insertar(&terminados, meterTerminados); //cambios
+                    meterEnTerminados(linea);
                     mvprintw(9,4,"Archivo terminado");
                     refresh();
                 }
             }
             else{
-                meterTerminados = sacarFrente(&ejecucion);  //cambios
-                insertar(&terminados, meterTerminados);
+                meterEnTerminados(linea);
                 cerrarArch_error(7);
                 error_archivo = true;
                 break;
@@ -446,12 +465,12 @@ int main(){
             refresh();
             mvprintw(fila,56,"%d",EDX);
             refresh();
-            usleep(500000);
+            usleep(50000);
             PC++;
             coma = false; 
             espacio = false;
 
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2, linea); // cambios
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2); // cambios
 
             end = false;
             cortar = false;
@@ -466,8 +485,7 @@ int main(){
         }
 
         if(end == false && error_archivo == false){
-            meterTerminados = sacarFrente(&ejecucion);  //cambios
-            insertar(&terminados, meterTerminados);
+            meterEnTerminados(linea);
             cerrarArch_error(5);  ///////checar
             continue;
         }
