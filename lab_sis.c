@@ -22,7 +22,9 @@ int PID = 0;
 PCB listos;
 PCB ejecucion;
 PCB terminados;
-int numLinea = 6;
+int numLineaErrorLista = 5;
+int numLineaComando = 4;
+int numFilaEjecucion = 2;
 
 int kbhit(void);
 
@@ -39,39 +41,39 @@ int cerrarArch_error(int num){
     }
     switch(num){
         case 1:
-            mvprintw(5,4,"%d\tlinea invalida debido a numero mayor de argumentos\n", PC);
+            mvprintw(numLineaErrorLista,4,"%d\tlinea invalida debido a numero mayor de argumentos", PC);
             refresh();
             break;
         case 2:
-            mvprintw(5,4,"%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)\n", PC);//
+            mvprintw(numLineaErrorLista,4,"%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)", PC);//
             refresh();
             break;
         case 3:
-            mvprintw(5,4,"%d\ttercer argumento invalido, revisa sintaxis\n", PC);//
+            mvprintw(numLineaErrorLista,4,"%d\ttercer argumento invalido, revisa sintaxis", PC);//
             refresh();
             break;
         case 4:
-            mvprintw(5,4,"%d\tel segundo argumento no corresponde a un registro valido\n", PC); //
+            mvprintw(numLineaErrorLista,4,"%d\tel segundo argumento no corresponde a un registro valido", PC); //
             refresh();
             break;
         case 5:
-            mvprintw(5,4,"%d\tno se encontro una sentencia END", PC);//
+            mvprintw(numLineaErrorLista,4,"%d\tno se encontro una sentencia END", PC);//
             refresh();
             break;
         case 6:
-            mvprintw(5,4,"%d\terror division por 0\n", PC); //
+            mvprintw(numLineaErrorLista,4,"%d\terror division por 0", PC); //
             refresh();
             break;
         case 7:
-            mvprintw(5,4,"%d\tinstruccion inicial no valida\n", PC); //
+            mvprintw(numLineaErrorLista,4,"%d\tinstruccion inicial no valida", PC); //
             refresh();
             break;
         case 8:
-            mvprintw(5,4,"%d\tdemasiados argumentos en sentencia END\n", PC);
+            mvprintw(numLineaErrorLista,4,"%d\tdemasiados argumentos en sentencia END", PC);
             refresh();
             break;
         case 9:
-            mvprintw(5,4,"%d\tsintaxis incorrecta en sentencias INC o DEC\n", PC);
+            mvprintw(numLineaErrorLista,4,"%d\tsintaxis incorrecta en sentencias INC o DEC", PC);
             refresh();
             break;
     }
@@ -185,7 +187,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
 	char *token_comandos;
     char comando_to[10];
     char archivo_to[50];
-    int fila = 2;
+    int numFilaEjecucion = 2;
 
     while(*cortar == false){    
 
@@ -195,12 +197,10 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         nombre_archivo[0] = '\0'; /////checar
 
         if(kbhit()){
-            move(10,0);
-            clrtoeol();
-            move(9,0);
+            move(numLineaComando,0);
             clrtoeol();
             refresh();
-            mvscanw(10,4,"%49[^\n]",cad);
+            mvscanw(numLineaComando,4,"%49[^\n]",cad);
         }
         else{
             cad[0] = '\0';
@@ -227,13 +227,14 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0')){
             move(5,0);
             clrtoeol();
-            move(fila,0);
+            move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
             
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
             PID++; //cambios
+            
             PCB *nuevo = crear_nodo(PID,nombre_archivo,PC,"0",0,0,0,0); //cambios  ////checar lo de linea
             insertar(&listos, nuevo); //cambios
             //imprimir(&listos);
@@ -245,7 +246,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             break;
         }
         else if (comando_to[0] != '\0'){
-            mvprintw(5,4, "Error, comando de terminal no valido");
+            mvprintw(numLineaErrorLista,4, "Error, comando de terminal no valido");
             refresh();
             continue;
         }
@@ -309,7 +310,6 @@ int main(){
     bool coma = false;
     bool espacio = false;
     char nombre_archivo[50];
-    int fila = 2;
     bool salir = false;
     bool ejecuta = false;
     bool cortar = false;
@@ -319,6 +319,7 @@ int main(){
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
+    int numLineaLista = 6;
     
     initscr();
     while (salir == false){
@@ -354,17 +355,21 @@ int main(){
         arc_instrucciones = fopen(archivo->nombre_proceso, "r"); //cambios
 
         if (arc_instrucciones == NULL){
-            mvprintw(5,4,"ERROR: archivo no encontrado.");
+            mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
             meterEnTerminados(linea);
             refresh();
             continue;
         }
-        move(6,0);
+        numLineaLista = 6;
+        move(numLineaLista,0);
         clrtoeol();
         refresh();
-        imprimir(&ejecucion, 2, &numLinea);
-        imprimir(&listos, 1, &numLinea);
-        imprimir(&terminados, 3, &numLinea);
+        imprimir(&ejecucion, 2, &numLineaLista);
+        mvprintw(3,4 ,"%d", numLineaLista);
+        imprimir(&listos, 1, &numLineaLista);
+        mvprintw(3,4 ,"%d", numLineaLista);
+        imprimir(&terminados, 3, &numLineaLista);
+        mvprintw(3,4 ,"%d", numLineaLista);
         mvprintw(1,4,"PC\t\tIR\t\tEAX\tEBX\tECX\tEDX");
         refresh();
 
@@ -374,15 +379,15 @@ int main(){
             reg_to[0] = '\0';
             rv_to[0] = '\0';
             
-            move(fila,0);
+            move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
-            mvprintw(fila,4,"%d",PC);
+            mvprintw(numFilaEjecucion,4,"%d",PC);
             refresh();
         
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
 
-            mvprintw(fila,16,"%s",linea);
+            mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
 
             token = strsep(&st, " "); //instruccion
@@ -461,13 +466,13 @@ int main(){
                 break;
             }
 
-            mvprintw(fila,33,"%d",EAX);
+            mvprintw(numFilaEjecucion,33,"%d",EAX);
             refresh();
-            mvprintw(fila,41,"%d",EBX);
+            mvprintw(numFilaEjecucion,41,"%d",EBX);
             refresh();
-            mvprintw(fila,48,"%d",ECX);
+            mvprintw(numFilaEjecucion,48,"%d",ECX);
             refresh();
-            mvprintw(fila,56,"%d",EDX);
+            mvprintw(numFilaEjecucion,56,"%d",EDX);
             refresh();
             usleep(50000);
             PC++;
