@@ -230,12 +230,22 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
-            
+            //cambios
+            FILE *archivo = fopen(archivo_to, "r"); //Nos sirve para poder comprobar que el archivo exista
+            if (archivo == NULL) 
+            {
+                mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
+                refresh();
+                continue;
+            } 
+            else
+            {
+                fclose(archivo); //Si existe, cerramos archivo y seguimos con lo demas (crear_nodo)
+            }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
             PID++; //cambios
-            
-            PCB *nuevo = crear_nodo(PID,nombre_archivo,PC,"0",0,0,0,0); //cambios  ////checar lo de linea
+            PCB *nuevo = crear_nodo(PID,nombre_archivo,0,"0",0,0,0,0); //cambios  ////checar lo de linea //Cada que se cree un nuevo nodo, su PC debe comenzar en 0.
             insertar(&listos, nuevo); //cambios
             //imprimir(&listos);
             *ejecuta = true;
@@ -351,9 +361,9 @@ int main(){
         }
         
         PCB *archivo = ejecucion.sig; //cambios
-        PC = 0;  
+        //PC = 0;
+        PC = archivo->PC; //cambios
         arc_instrucciones = fopen(archivo->nombre_proceso, "r"); //cambios
-
         if (arc_instrucciones == NULL){
             mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
             meterEnTerminados(linea);
@@ -372,7 +382,6 @@ int main(){
         mvprintw(3,4 ,"%d", numLineaLista);
         mvprintw(1,4,"PC\t\tIR\t\tEAX\tEBX\tECX\tEDX");
         refresh();
-
         while (((fgets(linea, sizeof(linea), arc_instrucciones)) != NULL)  && (salir == false)){
             st = linea;
             inst_to[0] = '\0';
