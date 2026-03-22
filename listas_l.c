@@ -8,9 +8,9 @@ PCB *crear_nodo(int pid, char nombre_proceso[], int PC, char IR[], int EAX, int 
 
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
-    strcpy(nuevo->nombre_proceso, nombre_proceso); //Cambiar por strncpy
+    strncpy(nuevo->nombre_proceso, nombre_proceso, sizeof(nuevo->nombre_proceso) - 1);
     nuevo->PC = PC;
-    strcpy(nuevo->IR, IR); //Cambiar por strncpy
+    strncpy(nuevo->IR, IR, sizeof(nuevo->IR) - 1);
     nuevo->EAX = EAX;
     nuevo->EBX = EBX;
     nuevo->ECX = ECX;
@@ -31,14 +31,25 @@ void insertar(PCB *lista, PCB *nuevo){
 
 }
 
-void imprimir(PCB *lista){
+void imprimir(PCB *lista, int numLista, int *numLinea){
     PCB *temp = lista; //para imprimir nodos creamos un temp que apunte a la cabeza de la lista
-    int num = 5;
     while(temp->sig != NULL){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
         temp = temp->sig;
-        mvprintw(num,4, "%d\t%s\t%d\t%d\t%s\t%d\t%d\t%d\t%d",temp->PID,temp->nombre_proceso, temp->PC, temp->estado, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
-        num++;
-    }
+        if(numLista == 1){
+            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t\t%d\t%s\t\t%d\t%d\t%d\t%d",temp->PID,temp->nombre_proceso, "Listo", temp->PC, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            refresh();
+        }
+        if(numLista == 2){
+            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t%s",temp->PID,temp->nombre_proceso, "Ejecucion", "---------------------------------------------------");
+            refresh();
+        }
+        
+        if(numLista == 3){
+            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t%d\t%s\t\t%d\t%d\t%d\t%d",temp->PID,temp->nombre_proceso, "Terminado", temp->PC, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            refresh();
+        }
+        (*numLinea)++;
+    } 
 }
 
 PCB *sacarFrente(PCB *lista){  
@@ -89,11 +100,8 @@ void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int n
     else if((matar = buscar_sacar(lista_ejecucion, num_PID, 0)) != NULL){
         insertar(lista_terminados, matar);
     }
-    else if((matar = buscar_sacar(lista_terminados, num_PID, 1)) != NULL){
-        printf("\nEste proceso ya esta terminado\n");
-    }
     else{
-        printf("\nNo existe ese proceso\n");
+        mvprintw(5,4,"No existe ese proceso"); //mvprint
     }
 }
 

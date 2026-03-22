@@ -7,7 +7,6 @@ typedef struct PCB {
     int PID;
     char nombre_proceso[50];
     int PC;
-    int estado;
     char IR[64];
     int EAX,EBX,ECX,EDX;
     struct PCB *sig;
@@ -17,7 +16,7 @@ PCB *crear_nodo(int pid, char nombre_proceso[], int PC, char IR[], int EAX, int 
 
 void insertar(PCB *lista, PCB *nuevo);
 
-void imprimir(PCB *lista);
+void imprimir(PCB *lista, int numLista, int *numLinea);
 
 PCB *sacarFrente(PCB *lista);
 
