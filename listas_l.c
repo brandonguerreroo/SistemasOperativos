@@ -36,7 +36,12 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
     while(temp->sig != NULL){ //recorremos la lista hasta que el sig de algun nodo sea igual a NULL
         temp = temp->sig;
         if(numLista == 1){
-            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t\t%d\t%s\t\t%d\t%d\t%d\t%d",temp->PID,temp->nombre_proceso, "Listo", temp->PC, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            mvprintw(*numLinea,4, "%d", temp->PID);
+            mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,32, "%s","Listo");
+            mvprintw(*numLinea,48, "%d", temp->PC);
+            mvprintw(*numLinea,56, "%s", temp->IR);
+            mvprintw(*numLinea,72, "%d\t%d\t%d\t%d", temp->EAX, temp->EBX, temp->ECX, temp->EDX);
             refresh();
         }
         if(numLista == 2){
@@ -45,7 +50,12 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
         }
         
         if(numLista == 3){
-            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t%d\t%s\t\t%d\t%d\t%d\t%d",temp->PID,temp->nombre_proceso, "Terminado", temp->PC, temp->IR, temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            mvprintw(*numLinea,4, "%d", temp->PID);
+            mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,32, "%s","Terminado");
+            mvprintw(*numLinea,48, "%d", temp->PC);
+            mvprintw(*numLinea,56, "%s", temp->IR);
+            mvprintw(*numLinea,72, "%d\t%d\t%d\t%d", temp->EAX, temp->EBX, temp->ECX, temp->EDX);
             refresh();
         }
         (*numLinea)++;
