@@ -27,6 +27,7 @@ int numLineaComando = 4;
 int numFilaEjecucion = 2;
 int numLineaLista = 8;
 char copiaNombre_archivo[50];
+int Q = 3;
 
 int kbhit(void);
 
@@ -345,6 +346,8 @@ int main(){
     bool ejecuta = false;
     bool cortar = false;
     bool error_archivo = false;
+    bool entrar = false;
+    bool salidaPorQuantum = false;
 
     PCB *meterTerminados; 
     listos.sig = NULL;
@@ -361,6 +364,7 @@ int main(){
         error_archivo = false;
         coma = false;
         espacio = false;
+        salidaPorQuantum = false;
         
         mvprintw(0,4," ");
         refresh();
@@ -381,8 +385,9 @@ int main(){
         }
         
         PCB *archivo = ejecucion.sig; 
-        PC = archivo->PC;
-        strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1);
+        //PC = archivo->PC;
+        restaurarContexto(archivo, linea, sizeof(linea));
+        strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         arc_instrucciones = fopen(archivo->nombre_proceso, "r");
         if (arc_instrucciones == NULL){
             mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
@@ -400,7 +405,18 @@ int main(){
         mvprintw(1,4,"PC\t\tIR\t\tEAX\tEBX\tECX\tEDX");
         mvprintw(7,4,"PID\t\tNombre\t\tEstado\t\tPC\tIR\t\tEAX\tEBX\tECX\tEDX");
         refresh();
+        int qua = 0;
+        int i = 0;
+        entrar = false;
         while (((fgets(linea, sizeof(linea), arc_instrucciones)) != NULL)  && (salir == false)){
+            if(entrar == false){
+                if(i < PC){
+                    i++;
+                    continue;
+                }
+                entrar = true;
+            }
+            qua++;
             st = linea;
             inst_to[0] = '\0';
             reg_to[0] = '\0';
@@ -502,15 +518,28 @@ int main(){
             refresh();
             mvprintw(numFilaEjecucion,56,"%d",EDX);
             refresh();
-            usleep(50000);
+            usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
 
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2); // cambios
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2); 
 
             end = false;
             cortar = false;
+            if(qua == Q){
+                salidaPorQuantum = true;
+                PCB *nodoEnEjecucion; 
+                nodoEnEjecucion = sacarFrente(&ejecucion); 
+                guardarContexto(nodoEnEjecucion, copiaLinea);
+                insertar(&listos, nodoEnEjecucion);
+                limpiar();
+                //Imprimir cada que cambie listos
+                imprimir(&ejecucion, 2, &numLineaLista);
+                imprimir(&listos, 1, &numLineaLista);
+                imprimir(&terminados, 3, &numLineaLista);
+                break;
+            }
         }
         cerrarArch_error(0); // Este cierra el archivo pero no necesariamente ya acabó.
         if(ejecuta){
@@ -521,7 +550,9 @@ int main(){
         if(salir){
             continue;
         }
-
+        if(salidaPorQuantum == true){
+            continue;
+        }
         if(end == false && error_archivo == false){
             meterEnTerminados(copiaLinea);
             cerrarArch_error(5);  ///////checar

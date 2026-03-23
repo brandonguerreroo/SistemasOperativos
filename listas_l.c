@@ -88,7 +88,7 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
     while(temp1->sig != NULL){
         if(temp2->PID == num_PID){
             if(condicion == 1){
-                return temp2;
+                return temp2; //solo buscar
             }
             temp1->sig = temp2->sig;
             temp2->sig = NULL;
