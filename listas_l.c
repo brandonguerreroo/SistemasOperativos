@@ -102,7 +102,7 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
     return NULL;
 }  
 
-void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
+/*void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
     PCB *matar;
     if((matar = buscar_sacar(lista_listos, num_PID, 0)) != NULL){
         insertar(lista_terminados, matar);
@@ -113,4 +113,4 @@ void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int n
     else{
         mvprintw(5,4,"No existe ese proceso"); //mvprint
     }
-}
+}*/
