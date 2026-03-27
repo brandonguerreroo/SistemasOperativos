@@ -380,9 +380,12 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             if(listos.sig != NULL){            
                 break;
             }
-            else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){
+            else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){ // CAMBIAR
                 continue;
             }
+            /*else if(comando_to[0] == '\0'){
+                continue;
+            }*/
         }
         if(num_ciclo == 2){
             if(listos.sig != NULL && end == true){ //cambios
@@ -457,8 +460,13 @@ int main(){
         ejecuta = false;
 
         if(ejecucion.sig == NULL){
-            PCB *meterEjecucion = sacarFrente(&listos); 
+            PCB *meterEjecucion = sacarFrente(&listos);
+            // Si no hay nada en listos, no meter nada en ejecucion
+            if(meterEjecucion == NULL){
+                continue;
+            } 
             insertar(&ejecucion, meterEjecucion); 
+            
         }
         
         PCB *archivo = ejecucion.sig; 
@@ -581,6 +589,8 @@ int main(){
                 }
                 else{
                     meterEnTerminados(copiaLinea);
+                    mvprintw(5,4,"%d", qua);
+                    refresh();
                 }
             }
             else{
@@ -598,21 +608,13 @@ int main(){
             refresh();
             mvprintw(numFilaEjecucion,56,"%d",EDX);
             refresh();
-            usleep(500000);
+            usleep(50000);
             PC++;
             coma = false; 
             espacio = false;
-
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2); 
-    
-            end = false;
-            cortar = false;
-
-            if(mataEjecucion){
-                break;
-            }
-
-            if(qua == Q){
+            if(qua == Q && end == false){
+                mvprintw(numLineaErrorLista,4,"ERRORORR");
+                refresh();
                 salidaPorQuantum = true;
                 PCB *nodoEnEjecucion; 
                 nodoEnEjecucion = sacarFrente(&ejecucion); 
@@ -623,6 +625,15 @@ int main(){
                 imprimir(&ejecucion, 2, &numLineaLista);
                 imprimir(&listos, 1, &numLineaLista);
                 imprimir(&terminados, 3, &numLineaLista);
+                break;
+            }
+            
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 2); 
+    
+            end = false;
+            cortar = false;
+
+            if(mataEjecucion){
                 break;
             }
         }
