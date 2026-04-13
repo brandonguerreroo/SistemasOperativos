@@ -22,6 +22,4 @@ PCB *sacarFrente(PCB *lista);
 
 PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
-void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID);
-
 #endif

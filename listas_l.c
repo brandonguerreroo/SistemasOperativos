@@ -41,7 +41,10 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,72, "%d\t%d\t%d\t%d", temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            mvprintw(*numLinea,80, "%d", temp->EAX);
+            mvprintw(*numLinea,88, "%d", temp->EBX);
+            mvprintw(*numLinea,96, "%d", temp->ECX);
+            mvprintw(*numLinea,104, "%d", temp->EDX);
             refresh();
         }
         if(numLista == 2){
@@ -55,7 +58,10 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,72, "%d\t%d\t%d\t%d", temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            mvprintw(*numLinea,80, "%d", temp->EAX);
+            mvprintw(*numLinea,96, "%d", temp->EBX);
+            mvprintw(*numLinea,112, "%d", temp->ECX);
+            mvprintw(*numLinea,128, "%d", temp->EDX);
             refresh();
         }
         (*numLinea)++;
@@ -102,7 +108,7 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
     return NULL;
 }  
 
-void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
+/*void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
     PCB *matar;
     if((matar = buscar_sacar(lista_listos, num_PID, 0)) != NULL){
         insertar(lista_terminados, matar);
@@ -113,49 +119,4 @@ void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int n
     else{
         mvprintw(5,4,"No existe ese proceso"); //mvprint
     }
-}
-
-/*int main() {
-    char nombre_proceso[50];
-    PCB listos; //cabeza
-    PCB ejecucion;
-    PCB terminados;
-    int num_PID = 4;
-
-    listos.sig = NULL;
-    ejecucion.sig = NULL;
-    terminados.sig = NULL;
-
-    //FILE *arc_instrucciones = fopen("hola.txt","r");
-    for(int i = 1; i <= 4 ; i++){
-        printf("Ingrese el nombre del proceso: \n");
-        scanf("%s", nombre_proceso);
-        PCB *nuevo = crear_nodo(i,nombre_proceso,0,"MOV",0,0,0,0);
-        insertar(&listos, nuevo);
-    }
-    printf("LISTOS\n");
-    imprimir(&listos);
-
-    PCB *meterEjecucion = sacarFrente(&listos);  
-    insertar(&ejecucion, meterEjecucion);
-    printf("LISTOS\n");
-    imprimir(&listos);
-    printf("EJECUCION\n");
-    imprimir(&ejecucion);
-
-    matar(&listos, &ejecucion, &terminados, num_PID);
-
-    printf("LISTOS\n");
-    imprimir(&listos);
-    printf("EJECUCION\n");
-    imprimir(&ejecucion);
-    printf("TERMINADOS\n");
-    imprimir(&terminados);
-
-    matar(&listos, &ejecucion, &terminados, 4);
-    printf("TERMINADOS\n");
-    imprimir(&terminados);
-
-    //imprimir(&listos);
-    return 0;
-}   */     
+}*/
