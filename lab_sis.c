@@ -319,6 +319,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             limpiar();
+            PID_no_number = false;
             //Imprimir cada que se mate un proceso
             imprimir(&ejecucion, 2, &numLineaLista);  
             imprimir(&listos, 1, &numLineaLista);
@@ -605,7 +606,7 @@ int main(){
             refresh();
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             refresh();
-            //usleep(50000);
+            usleep(5000);
             PC++;
             coma = false; 
             espacio = false;
