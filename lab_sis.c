@@ -606,7 +606,7 @@ int main(){
             refresh();
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             refresh();
-            usleep(5000);
+            //usleep(5000);
             PC++;
             coma = false; 
             espacio = false;

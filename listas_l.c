@@ -42,9 +42,9 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
             mvprintw(*numLinea,80, "%d", temp->EAX);
-            mvprintw(*numLinea,88, "%d", temp->EBX);
-            mvprintw(*numLinea,96, "%d", temp->ECX);
-            mvprintw(*numLinea,104, "%d", temp->EDX);
+            mvprintw(*numLinea,96, "%d", temp->EBX);
+            mvprintw(*numLinea,112, "%d", temp->ECX);
+            mvprintw(*numLinea,128, "%d", temp->EDX);
             refresh();
         }
         if(numLista == 2){
