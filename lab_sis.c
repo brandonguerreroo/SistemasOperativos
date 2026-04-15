@@ -374,11 +374,10 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             continue;
         }
         if(num_ciclo == 1){  
-            //mvprintw(5,4, "Entro 1");
             if(listos.sig != NULL){            
                 break;
             }
-            else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){ // CAMBIAR
+            else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){
                 continue;
             }
             /*else if(comando_to[0] == '\0'){
@@ -452,10 +451,12 @@ int main(){
             if(salir == true){
                 continue;
             }
-            end = false;
-            cortar = false;
+            //end = false;
+            //cortar = false;
         }
         ejecuta = false;
+        end = false;        //debe volver a falso
+        cortar = false;
 
         if(ejecucion.sig == NULL){
             PCB *meterEjecucion = sacarFrente(&listos);
@@ -587,8 +588,7 @@ int main(){
                 }
                 else{
                     meterEnTerminados(copiaLinea);
-                    /*mvprintw(5,4,"%d", qua);
-                    refresh();*/
+                    break;
                 }
             }
             else{
@@ -606,7 +606,7 @@ int main(){
             refresh();
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             refresh();
-            //usleep(5000);
+            usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
@@ -634,15 +634,13 @@ int main(){
             }
         }
         cerrarArch_error(0); // Este cierra el archivo pero no necesariamente ya acabó.
-        if(mataEjecucion)
-        {
+        if(mataEjecucion){
             continue;
         }
         if(ejecuta){
             salir = false;
             continue;
         }
-        
         if(salir){
             continue;
         }
