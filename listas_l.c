@@ -9,8 +9,10 @@ PCB *crear_nodo(int pid, char nombre_proceso[], int PC, char IR[], int EAX, int 
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
     strncpy(nuevo->nombre_proceso, nombre_proceso, sizeof(nuevo->nombre_proceso) - 1);
+    nuevo->nombre_proceso[sizeof(nuevo->nombre_proceso)-1] = '\0';
     nuevo->PC = PC;
     strncpy(nuevo->IR, IR, sizeof(nuevo->IR) - 1);
+    nuevo->IR[sizeof(nuevo->IR)-1] = '\0';
     nuevo->EAX = EAX;
     nuevo->EBX = EBX;
     nuevo->ECX = ECX;
@@ -48,7 +50,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             refresh();
         }
         if(numLista == 2){
-            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t%s",temp->PID,temp->nombre_proceso, "Ejecucion", "---------------------------------------------------");
+            mvprintw(*numLinea,4, "%d\t\t%s\t\t%s\t%s",temp->PID,temp->nombre_proceso, "Ejecucion", "-----------------------------------------------------------------------------------");
             refresh();
         }
         
@@ -107,16 +109,3 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
     }
     return NULL;
 }  
-
-/*void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
-    PCB *matar;
-    if((matar = buscar_sacar(lista_listos, num_PID, 0)) != NULL){
-        insertar(lista_terminados, matar);
-    }
-    else if((matar = buscar_sacar(lista_ejecucion, num_PID, 0)) != NULL){
-        insertar(lista_terminados, matar);
-    }
-    else{
-        mvprintw(5,4,"No existe ese proceso"); //mvprint
-    }
-}*/

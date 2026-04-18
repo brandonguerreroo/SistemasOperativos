@@ -75,7 +75,7 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 5:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tno se encontro una sentencia END", copiaNombre_archivo, PC);//
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tno se encontro una sentencia END", copiaNombre_archivo, PC);  //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -93,13 +93,19 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 8:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tdemasiados argumentos en sentencia END", copiaNombre_archivo, PC);
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tdemasiados argumentos en sentencia END", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 9:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencias INC o DEC", copiaNombre_archivo, PC);
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencias INC o DEC", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 10:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga (revisar archivo)", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -208,7 +214,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     return 0;
 }
 
-void limpiar(){  //Limpia la pantalla desde la linea 7 hasta el ultimo renglon que se imprimio
+void limpiar(){  //Limpia la pantalla desde la linea 8 hasta el ultimo renglon que se imprimio
     for(int l = 8; l <= numLineaLista; l++){
         move(l,0);
         clrtoeol();
@@ -223,6 +229,7 @@ void guardarContexto(PCB *nodo, char linea[])
     nodo->ECX = ECX;
     nodo->EDX = EDX;
     strncpy(nodo->IR,linea, sizeof(nodo->IR) - 1);
+    nodo->IR[sizeof(nodo->IR)-1] = '\0';
     nodo->PC = PC;
 }
 
@@ -257,7 +264,7 @@ int matar(int num_PID){
         return 0;
     }
 }
-void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){ //cambios
+void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){ 
 
     char cad[50];
 	char *comando = cad; 
@@ -272,7 +279,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         comando_to[0] = '\0';
         archivo_to[0] = '\0';
         cad[0] = '\0';
-        nombre_archivo[0] = '\0'; /////checar
+        nombre_archivo[0] = '\0';
 
         if(kbhit()){
             move(numLineaComando,0);
@@ -326,7 +333,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             imprimir(&terminados, 3, &numLineaLista);
         }
         else if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
-            *ejecuta = false; //cambios
+            *ejecuta = false;
             *salir = true;
             break;
         }
@@ -360,10 +367,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             imprimir(&ejecucion, 2, &numLineaLista); 
             imprimir(&listos, 1, &numLineaLista);
             imprimir(&terminados, 3, &numLineaLista);
-
-            /*if(num_ciclo == 2){ // cambios
-                *salir = true;            
-            }*/
             break;
         }
         else if (comando_to[0] != '\0'){
@@ -380,12 +383,9 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){
                 continue;
             }
-            /*else if(comando_to[0] == '\0'){
-                continue;
-            }*/
         }
         if(num_ciclo == 2){
-            if(listos.sig != NULL && end == true){ //cambios
+            if(listos.sig != NULL && end == true){ 
                 *ejecuta = true;
                 break;
             }
@@ -404,6 +404,7 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
     ECX = nodo->ECX;
     EDX = nodo->EDX;
     strncpy(linea,nodo->IR, tam_linea - 1);
+    linea[tam_linea - 1] = '\0';
     PC = nodo->PC;
 }
 
@@ -447,12 +448,10 @@ int main(){
         refresh();
         
         if(ejecuta == false){
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); //cambios
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); 
             if(salir == true){
                 continue;
             }
-            //end = false;
-            //cortar = false;
         }
         ejecuta = false;
         end = false;        //debe volver a falso
@@ -469,9 +468,11 @@ int main(){
         }
         
         PCB *archivo = ejecucion.sig; 
-        //PC = archivo->PC;
+        copiaLinea[0] = '\0';
         restaurarContexto(archivo, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
+        copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
+        
         arc_instrucciones = fopen(archivo->nombre_proceso, "r");
         if (arc_instrucciones == NULL){
             mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
@@ -503,6 +504,15 @@ int main(){
                 }
                 entrar = true;
             }
+            if(strchr(linea, '\n') == NULL){ //busca \n en linea si no lo encuentra la linea es mas larga de lo que se permite
+                int c;
+                if((c = fgetc(arc_instrucciones)) != EOF){ //por si es el caso de la linea END ya que no tiene \n al final
+                    meterEnTerminados(copiaLinea);
+                    cerrarArch_error(10);
+                    error_archivo = true;
+                    break;
+                }
+            }
             qua++;
             st = linea;
             inst_to[0] = '\0';
@@ -517,6 +527,7 @@ int main(){
         
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
             strncpy(copiaLinea, linea, sizeof(copiaLinea) - 1);
+            copiaLinea[sizeof(copiaLinea)-1] = '\0';
 
             mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
@@ -606,7 +617,7 @@ int main(){
             refresh();
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             refresh();
-            usleep(500000);
+            usleep(5000);
             PC++;
             coma = false; 
             espacio = false;
@@ -633,7 +644,7 @@ int main(){
                 break;
             }
         }
-        cerrarArch_error(0); // Este cierra el archivo pero no necesariamente ya acabó.
+        cerrarArch_error(0); // Este nada mas cierra el archivo
         if(mataEjecucion){
             continue;
         }
@@ -649,7 +660,7 @@ int main(){
         }
         if(end == false && error_archivo == false){
             meterEnTerminados(copiaLinea);
-            cerrarArch_error(5);  ///////checar
+            cerrarArch_error(5);  
             continue;
         }
     }
