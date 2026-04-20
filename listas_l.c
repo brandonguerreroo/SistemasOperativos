@@ -4,18 +4,21 @@
 #include "LISTAS.h"
 #include <curses.h>
 
-PCB *crear_nodo(int pid, char nombre_proceso[], int PC, char IR[], int EAX, int EBX, int ECX, int EDX){
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, char IR[]){
 
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
+    nuevo->GID = gid;
     strncpy(nuevo->nombre_proceso, nombre_proceso, sizeof(nuevo->nombre_proceso) - 1);
     nuevo->PC = PC;
     strncpy(nuevo->IR, IR, sizeof(nuevo->IR) - 1);
-    nuevo->EAX = EAX;
-    nuevo->EBX = EBX;
-    nuevo->ECX = ECX;
-    nuevo->EDX = EDX;
-    
+    nuevo->EAX = 0;
+    nuevo->EBX = 0;
+    nuevo->ECX = 0;
+    nuevo->EDX = 0;
+    nuevo->CPU = 0;
+    nuevo->GCPU = 0;
+    nuevo->P = 60;
     nuevo->sig = NULL; //el sig del nodo nuevo debe apuntar a nulo porque lo vamos a insertar al final
     return nuevo;
 }
@@ -41,7 +44,10 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,72, "%d\t%d\t%d\t%d", temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            mvprintw(*numLinea,80, "%d", temp->EAX);
+            mvprintw(*numLinea,96, "%d", temp->EBX);
+            mvprintw(*numLinea,112, "%d", temp->ECX);
+            mvprintw(*numLinea,128, "%d", temp->EDX);
             refresh();
         }
         if(numLista == 2){
@@ -55,7 +61,10 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,72, "%d\t%d\t%d\t%d", temp->EAX, temp->EBX, temp->ECX, temp->EDX);
+            mvprintw(*numLinea,80, "%d", temp->EAX);
+            mvprintw(*numLinea,96, "%d", temp->EBX);
+            mvprintw(*numLinea,112, "%d", temp->ECX);
+            mvprintw(*numLinea,128, "%d", temp->EDX);
             refresh();
         }
         (*numLinea)++;
@@ -100,17 +109,4 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
         }
     }
     return NULL;
-}  
-
-/*void matar(PCB *lista_listos, PCB *lista_ejecucion, PCB *lista_terminados, int num_PID){
-    PCB *matar;
-    if((matar = buscar_sacar(lista_listos, num_PID, 0)) != NULL){
-        insertar(lista_terminados, matar);
-    }
-    else if((matar = buscar_sacar(lista_ejecucion, num_PID, 0)) != NULL){
-        insertar(lista_terminados, matar);
-    }
-    else{
-        mvprintw(5,4,"No existe ese proceso"); //mvprint
-    }
-}*/
+}
