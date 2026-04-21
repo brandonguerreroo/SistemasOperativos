@@ -18,6 +18,12 @@ int ECX = 0;
 int EDX = 0; 
 int PC = 0;
 int PID = 0;
+int GID = 0;
+float Wk = 0;
+int numeroDeGrupos = 0;
+int base = 60;
+int CPU_temp = 0;
+int GCPU_temp = 0;
 
 PCB listos;
 PCB ejecucion;
@@ -161,6 +167,13 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
                 }
             }
         }
+        if(len == 1 && rv_to[0] == '-') // Caso para cuando solo haya un '-' sin numero
+        {
+            mvprintw(6,4,"Hola");
+            refresh();
+            caracter = true;
+        }
+        
         if(caracter){
             cerrarArch_error(3);
             return 1;
@@ -231,6 +244,11 @@ void guardarContexto(PCB *nodo, char linea[])
     strncpy(nodo->IR,linea, sizeof(nodo->IR) - 1);
     nodo->IR[sizeof(nodo->IR)-1] = '\0';
     nodo->PC = PC;
+    nodo->CPU = CPU_temp / 2;  //Actualizar los valores para este nodo
+    nodo->GCPU = GCPU_temp / 2;
+    Wk = 1 / numeroDeGrupos;
+    nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4 * Wk) );
+    actualizar_PCB_del_grupo(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
 }
 
 void meterEnTerminados(char linea[]){
@@ -358,8 +376,10 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            PID++; 
-            PCB *nuevo = crear_nodo(PID,nombre_archivo,0,"0",0,0,0,0);
+            PID++;
+            GID++; 
+            numeroDeGrupos ++;
+            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,"0"); // Se agregó
             insertar(&listos, nuevo); 
             *ejecuta = true;
             limpiar();
@@ -406,6 +426,9 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
     strncpy(linea,nodo->IR, tam_linea - 1);
     linea[tam_linea - 1] = '\0';
     PC = nodo->PC;
+    CPU_temp = nodo->CPU;
+    GCPU_temp = nodo->GCPU;
+
 }
 
 int main(){
@@ -490,9 +513,11 @@ int main(){
         imprimir(&terminados, 3, &numLineaLista);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX");
-        mvprintw(7,4,"PID\t\tNombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX");
+        mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX         CPU     GCPU");
         refresh();
         int qua = 0;
+        //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
+        //GCPU_temp = 0;
         int i = 0;
         entrar = false;
         mataEjecucion = false;
@@ -514,6 +539,9 @@ int main(){
                 }
             }
             qua++;
+            CPU_temp += 20;
+            GCPU_temp += 20;
+
             st = linea;
             inst_to[0] = '\0';
             reg_to[0] = '\0';
@@ -610,14 +638,13 @@ int main(){
             }
 
             mvprintw(numFilaEjecucion,32,"%d",EAX);
-            refresh();
             mvprintw(numFilaEjecucion,48,"%d",EBX);
-            refresh();
             mvprintw(numFilaEjecucion,64,"%d",ECX);
-            refresh();
             mvprintw(numFilaEjecucion,80,"%d",EDX);
+            mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
+            mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             refresh();
-            usleep(5000);
+            usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
