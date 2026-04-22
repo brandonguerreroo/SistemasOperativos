@@ -21,6 +21,8 @@ void imprimir(PCB *lista, int numLista, int *numLinea);
 
 PCB *sacarFrente(PCB *lista);
 
+void actualizar_PCBs(PCB *lista, int GCPU_actual, int num_GID, float WK, int base);
+
 PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
 #endif

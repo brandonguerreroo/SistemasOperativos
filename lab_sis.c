@@ -24,6 +24,7 @@ int numeroDeGrupos = 0;
 int base = 60;
 int CPU_temp = 0;
 int GCPU_temp = 0;
+
 PCB listos;
 PCB ejecucion;
 PCB terminados;
@@ -243,8 +244,11 @@ void guardarContexto(PCB *nodo, char linea[])
     strncpy(nodo->IR,linea, sizeof(nodo->IR) - 1);
     nodo->IR[sizeof(nodo->IR)-1] = '\0';
     nodo->PC = PC;
-    nodo->CPU = CPU_temp/2;
-    nodo->GCPU = GCPU_temp;
+    nodo->CPU = CPU_temp / 2;  //Actualizar los valores para este nodo
+    nodo->GCPU = GCPU_temp / 2;
+    Wk = 1.0 / numeroDeGrupos;
+    nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4.0 * Wk) );
+    actualizar_PCBs(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
 }
 
 void meterEnTerminados(char linea[]){
@@ -285,13 +289,16 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
 	char *token_comandos;
     char comando_to[10];
     char archivo_to[50];
+    char noinst[50];
     int numFilaEjecucion = 2;
-    int procesoPID;
-    bool PID_no_number = false;
+    int procesoPID_mata, procesoPID_fork;
+    bool noinst_no_number = false;
+    int numeroDeInstruccion;
     while(*cortar == false){    
 
         comando_to[0] = '\0';
         archivo_to[0] = '\0';
+        noinst[0] = '\0';
         cad[0] = '\0';
         nombre_archivo[0] = '\0';
 
@@ -309,21 +316,25 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         if(token_comandos != NULL){
             strncpy(comando_to, token_comandos, sizeof(comando_to) - 1);
             comando_to[sizeof(comando_to) - 1] = '\0';
-            
         }
 
-        token_comandos = strsep(&comando, "\n");
+        token_comandos = strsep(&comando, " ");
         if(token_comandos != NULL){
             strncpy(archivo_to, token_comandos, sizeof(archivo_to) - 1);
             archivo_to[sizeof(archivo_to) - 1] = '\0';
         }
-        if((strcmp(comando_to,"mata") == 0) && (archivo_to[0] != '\0'))
-        {
+
+        token_comandos = strsep(&comando, "\n");
+        if(token_comandos != NULL){
+            strncpy(noinst, token_comandos, sizeof(noinst) - 1);
+            noinst[sizeof(noinst) - 1] = '\0';
+        }
+
+        if((strcmp(comando_to,"mata") == 0) && (archivo_to[0] != '\0' && (noinst[0] == '\0'))){
+            bool PID_no_number = false;
             int longitud = strlen(archivo_to);
-            for(int i = 0; i < longitud; i++)
-            {   
-                if (archivo_to[i] < '0' || archivo_to[i] > '9') 
-                {
+            for(int i = 0; i < longitud; i++){   
+                if (archivo_to[i] < '0' || archivo_to[i] > '9'){
                     mvprintw(numLineaErrorLista,4, "Error, el PID no es un numero");
                     refresh();
                     sleep(1);
@@ -333,8 +344,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
-                procesoPID = atoi(archivo_to);
-                if(matar(procesoPID) == 1)
+                procesoPID_mata = atoi(archivo_to);
+                if(matar(procesoPID_mata) == 1)
                 {
                     mataEjecucion = true;
                 }
@@ -346,12 +357,12 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             imprimir(&listos, 1, &numLineaLista);
             imprimir(&terminados, 3, &numLineaLista);
         }
-        else if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') ){
+        else if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') && (noinst[0] == '\0') ){
             *ejecuta = false;
             *salir = true;
             break;
         }
-        else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0')){
+        else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0') && (noinst[0] == '\0')){
             move(5,0);
             clrtoeol();
             move(numFilaEjecucion,0);
@@ -374,6 +385,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             nombre_archivo[tam_arch - 1] = '\0';
             PID++;
             GID++; 
+            numeroDeGrupos ++;
             PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,"0"); // Se agregó
             insertar(&listos, nuevo); 
             *ejecuta = true;
@@ -384,13 +396,48 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             imprimir(&terminados, 3, &numLineaLista);
             break;
         }
-        else if (comando_to[0] != '\0'){
+        else if((strcmp(comando_to, "fork") == 0) && (archivo_to[0] != '\0') && (noinst[0] != '\0')){
+            bool PID_no_number = false;
+            int longitud = strlen(archivo_to);
+            for(int i = 0; i < longitud; i++){   
+                if (archivo_to[i] < '0' || archivo_to[i] > '9'){
+                    mvprintw(numLineaErrorLista,4, "Error, el PID no es un numero");
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    PID_no_number = true;
+                    break;
+                }
+            }
+            if(PID_no_number == false){
+                procesoPID_fork = atoi(archivo_to);
+            }
+
+            longitud = strlen(noinst); // Reiniciamos
+ 
+            for(int i = 0; i < longitud; i++){   
+                if (noinst[i] < '0' || noinst[i] > '9'){
+                    mvprintw(numLineaErrorLista,4, "Error, el numero de instruccion no es un numero");
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    noinst_no_number = true;
+                    break;
+                }
+            }
+            if(noinst_no_number == false){
+                numeroDeInstruccion = atoi(noinst);
+            }
+            //CAMBIAR seguir con esto
+        }
+        else if (comando_to[0] != '\0' || (comando_to[0] == '\0' && archivo_to[0] != '\0')){
             mvprintw(numLineaErrorLista,4, "Error, comando de terminal no valido");
             refresh();
             sleep(1);
             limpiarLinea(numLineaErrorLista);
             continue;
         }
+        
         if(num_ciclo == 1){  
             if(listos.sig != NULL){            
                 break;
@@ -421,6 +468,8 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
     strncpy(linea,nodo->IR, tam_linea - 1);
     linea[tam_linea - 1] = '\0';
     PC = nodo->PC;
+    CPU_temp = nodo->CPU;
+    GCPU_temp = nodo->GCPU;
 
 }
 
@@ -474,6 +523,7 @@ int main(){
         cortar = false;
 
         if(ejecucion.sig == NULL){
+            // CAMBIAR Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
             PCB *meterEjecucion = sacarFrente(&listos);
             // Si no hay nada en listos, no meter nada en ejecucion
             if(meterEjecucion == NULL){
@@ -506,11 +556,11 @@ int main(){
         imprimir(&terminados, 3, &numLineaLista);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX");
-        mvprintw(7,4,"PID\t\tNombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX");
+        mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX         CPU     GCPU");
         refresh();
         int qua = 0;
-        CPU_temp = 0;
-        GCPU_temp = 0;
+        //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
+        //GCPU_temp = 0;
         int i = 0;
         entrar = false;
         mataEjecucion = false;
@@ -631,14 +681,13 @@ int main(){
             }
 
             mvprintw(numFilaEjecucion,32,"%d",EAX);
-            refresh();
             mvprintw(numFilaEjecucion,48,"%d",EBX);
-            refresh();
             mvprintw(numFilaEjecucion,64,"%d",ECX);
-            refresh();
             mvprintw(numFilaEjecucion,80,"%d",EDX);
+            mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
+            mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             refresh();
-            usleep(5000);
+            usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
