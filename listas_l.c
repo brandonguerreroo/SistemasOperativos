@@ -42,9 +42,11 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,24, "%d", temp->P); //quitar
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
+
             mvprintw(*numLinea,80, "%d", temp->EAX);
             mvprintw(*numLinea,96, "%d", temp->EBX);
             mvprintw(*numLinea,112, "%d", temp->ECX);
@@ -62,6 +64,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
              mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,24, "%d", temp->P); //quitar
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
@@ -89,13 +92,22 @@ PCB *sacarFrente(PCB *lista){
     return temp;
 }   
 
-void actualizar_PCB_del_grupo(PCB *lista, int GCPU_temp, int num_GID, float Wk, int base){
-    PCB *nodo_a_actualizar;
+void actualizar_PCBs(PCB *lista, int GCPU_temp, int num_GID, float Wk, int base){
     int prioridad;
-    while(( nodo_a_actualizar = buscar_sacar(lista,num_GID,1) ) != NULL){
-        nodo_a_actualizar->GCPU = GCPU_temp / 2;
-        prioridad = base + ( nodo_a_actualizar->CPU / 2 ) + ( nodo_a_actualizar->GCPU / (4 * Wk) );
-        nodo_a_actualizar->P = prioridad; 
+    PCB *temp = lista; 
+    while(temp->sig != NULL){ 
+        temp = temp->sig;
+        if(temp->GID == num_GID){
+            temp->GCPU = GCPU_temp / 2;
+            prioridad = base + ( temp->CPU / 2 ) + ( temp->GCPU / (4.0 * Wk) );
+            temp->P = prioridad; 
+        }
+        else{
+            temp->CPU = temp->CPU / 2;
+            temp->GCPU = temp->GCPU / 2;
+            prioridad = base + ( temp->CPU / 2 ) + ( temp->GCPU / (4.0 * Wk) );
+            temp->P = prioridad; 
+        }
     }
 };
 
@@ -125,4 +137,4 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
         }
     }
     return NULL;
-}   
+}
