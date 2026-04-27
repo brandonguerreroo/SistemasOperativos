@@ -351,7 +351,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             limpiar();
-            PID_no_number = false;
+            //PID_no_number = false;
             //Imprimir cada que se mate un proceso
             imprimir(&ejecucion, 2, &numLineaLista);  
             imprimir(&listos, 1, &numLineaLista);
@@ -383,11 +383,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
+            //for(int i = 0; i < 4; i++){
             PID++;
             GID++; 
             numeroDeGrupos ++;
             PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,"0"); // Se agregó
-            insertar(&listos, nuevo); 
+            insertar(&listos, nuevo);
+            //}
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
@@ -428,7 +430,28 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             if(noinst_no_number == false){
                 numeroDeInstruccion = atoi(noinst);
             }
-            //CAMBIAR seguir con esto
+            
+            PCB *nodoCopiar;
+            if((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL){
+                PID++;
+                PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion,"0"); // Se agregó
+                insertar(&listos, nuevo); 
+                //no se debe actualiazar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
+            }
+            else if((nodoCopiar = buscar_sacar(&listos, procesoPID_fork, 1)) != NULL){
+                PID++;
+                PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion,"0"); // Se agregó
+                insertar(&listos, nuevo); 
+                nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso perteneces al mismo grupo
+            }
+            limpiar();
+            //Imprimir cada que se copie un proceso
+            imprimir(&ejecucion, 2, &numLineaLista); 
+            imprimir(&listos, 1, &numLineaLista);
+            imprimir(&terminados, 3, &numLineaLista);
+            break;
+            //CAMBIAR checar que CPU y GCPU sean consistentes
+
         }
         else if (comando_to[0] != '\0' || (comando_to[0] == '\0' && archivo_to[0] != '\0')){
             mvprintw(numLineaErrorLista,4, "Error, comando de terminal no valido");
@@ -470,7 +493,6 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
     PC = nodo->PC;
     CPU_temp = nodo->CPU;
     GCPU_temp = nodo->GCPU;
-
 }
 
 int main(){
@@ -524,13 +546,15 @@ int main(){
 
         if(ejecucion.sig == NULL){
             // CAMBIAR Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
+            if(){
+            }
             PCB *meterEjecucion = sacarFrente(&listos);
             // Si no hay nada en listos, no meter nada en ejecucion
             if(meterEjecucion == NULL){
                 continue;
-            } 
+            }
+            sleep(1); 
             insertar(&ejecucion, meterEjecucion); 
-            
         }
         
         PCB *archivo = ejecucion.sig; 
@@ -687,7 +711,7 @@ int main(){
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             refresh();
-            usleep(500000);
+            usleep(1000000);
             PC++;
             coma = false; 
             espacio = false;

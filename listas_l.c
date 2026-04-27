@@ -98,6 +98,7 @@ void actualizar_PCBs(PCB *lista, int GCPU_temp, int num_GID, float Wk, int base)
     while(temp->sig != NULL){ 
         temp = temp->sig;
         if(temp->GID == num_GID){
+            temp->CPU = temp->CPU / 2;
             temp->GCPU = GCPU_temp / 2;
             prioridad = base + ( temp->CPU / 2 ) + ( temp->GCPU / (4.0 * Wk) );
             temp->P = prioridad; 
@@ -110,6 +111,18 @@ void actualizar_PCBs(PCB *lista, int GCPU_temp, int num_GID, float Wk, int base)
         }
     }
 };
+
+PCB *buscar_por_prioridad(PCB *lista){
+    int prioridad_mayor;
+    // CAMBIAR todo
+    PCB *temp = lista; 
+    while(temp->sig != NULL){ 
+        temp = temp->sig;
+        if(temp->P < prioridad_mayor){
+        }
+    }
+};
+
 
 PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){  
     //si la condicion esta en 1 busca y regresa si lo encuentra
