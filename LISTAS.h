@@ -25,4 +25,7 @@ void actualizar_PCBs(PCB *lista, int GCPU_actual, int num_GID, float WK, int bas
 
 PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
+
+PCB *buscar_por_prioridad(PCB *lista);
+
 #endif

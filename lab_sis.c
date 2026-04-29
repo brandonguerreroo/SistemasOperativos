@@ -246,6 +246,10 @@ void guardarContexto(PCB *nodo, char linea[])
     nodo->PC = PC;
     nodo->CPU = CPU_temp / 2;  //Actualizar los valores para este nodo
     nodo->GCPU = GCPU_temp / 2;
+    // CAMBIAR primero verificar numeroDeGrupos
+    if((buscar_sacar(&listos, nodo->GID, 1)) == NULL){
+        numeroDeGrupos--;
+    }
     Wk = 1.0 / numeroDeGrupos;
     nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4.0 * Wk) );
     actualizar_PCBs(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
@@ -383,13 +387,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            //for(int i = 0; i < 4; i++){
+            for(int i = 0; i < 2; i++){
             PID++;
             GID++; 
             numeroDeGrupos ++;
             PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,"0"); // Se agregó
             insertar(&listos, nuevo);
-            //}
+            }
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
@@ -533,7 +537,7 @@ int main(){
         
         mvprintw(0,4," ");
         refresh();
-        
+        //sleep(3);
         if(ejecuta == false){
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); 
             if(salir == true){
@@ -546,14 +550,12 @@ int main(){
 
         if(ejecucion.sig == NULL){
             // CAMBIAR Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
-            if(){
-            }
-            PCB *meterEjecucion = sacarFrente(&listos);
+            PCB *meterEjecucion = buscar_por_prioridad(&listos);
+            //PCB *meterEjecucion = sacarFrente(&listos);
             // Si no hay nada en listos, no meter nada en ejecucion
             if(meterEjecucion == NULL){
                 continue;
             }
-            sleep(1); 
             insertar(&ejecucion, meterEjecucion); 
         }
         
@@ -711,7 +713,7 @@ int main(){
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             refresh();
-            usleep(1000000);
+            //usleep(1000000);
             PC++;
             coma = false; 
             espacio = false;

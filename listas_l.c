@@ -42,16 +42,15 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
-            mvprintw(*numLinea,24, "%d", temp->P); //quitar
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-
             mvprintw(*numLinea,80, "%d", temp->EAX);
             mvprintw(*numLinea,96, "%d", temp->EBX);
             mvprintw(*numLinea,112, "%d", temp->ECX);
             mvprintw(*numLinea,128, "%d", temp->EDX);
-            mvprintw(*numLinea,140, "%d", temp->CPU);
+            mvprintw(*numLinea,136, "%d", temp->P);
+            mvprintw(*numLinea,142, "%d", temp->CPU);
             mvprintw(*numLinea,148, "%d", temp->GCPU);
             refresh();
         }
@@ -64,7 +63,6 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
              mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
-            mvprintw(*numLinea,24, "%d", temp->P); //quitar
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
@@ -72,7 +70,8 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,96, "%d", temp->EBX);
             mvprintw(*numLinea,112, "%d", temp->ECX);
             mvprintw(*numLinea,128, "%d", temp->EDX);
-            mvprintw(*numLinea,140, "%d", temp->CPU);
+            mvprintw(*numLinea,136, "%d", temp->P);
+            mvprintw(*numLinea,142, "%d", temp->CPU);
             mvprintw(*numLinea,148, "%d", temp->GCPU);
             refresh();
         }
@@ -113,14 +112,24 @@ void actualizar_PCBs(PCB *lista, int GCPU_temp, int num_GID, float Wk, int base)
 };
 
 PCB *buscar_por_prioridad(PCB *lista){
-    int prioridad_mayor;
-    // CAMBIAR todo
-    PCB *temp = lista; 
-    while(temp->sig != NULL){ 
+    PCB *temp = lista;
+    PCB *temp2 = lista->sig;
+    if(temp2 == NULL){
+        return NULL;
+    }
+    PCB *nodoDeMayorPrioridad = temp2; // Es el primero de la lista
+    PCB *anteriorNodoMayorPrioridad = temp;
+    while(temp2->sig != NULL){ 
+        temp2 = temp2->sig;
         temp = temp->sig;
-        if(temp->P < prioridad_mayor){
+        if(temp2->P < nodoDeMayorPrioridad->P){
+            nodoDeMayorPrioridad = temp2;
+            anteriorNodoMayorPrioridad = temp;
         }
     }
+    anteriorNodoMayorPrioridad->sig = nodoDeMayorPrioridad->sig;
+    nodoDeMayorPrioridad->sig = NULL;
+    return nodoDeMayorPrioridad;
 };
 
 
