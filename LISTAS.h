@@ -23,6 +23,10 @@ PCB *sacarFrente(PCB *lista);
 
 void actualizar_PCBs(PCB *lista, int GCPU_actual, int num_GID, float WK, int base);
 
+PCB *buscar_por_prioridad(PCB *lista);
+
 PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
+
+PCB *buscarPorGID(PCB *lista, int num_GID);
 
 #endif

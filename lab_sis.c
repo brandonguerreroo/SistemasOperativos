@@ -36,6 +36,7 @@ char copiaNombre_archivo[50];
 int Q = 3;
 bool mataEjecucion = false;
 char copiaLinea[64];
+bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
 int kbhit(void);
 void limpiarLinea(int num)
@@ -246,15 +247,27 @@ void guardarContexto(PCB *nodo, char linea[])
     nodo->PC = PC;
     nodo->CPU = CPU_temp / 2;  //Actualizar los valores para este nodo
     nodo->GCPU = GCPU_temp / 2;
+    // CAMBIAR checar por qué no funciona. Resta numeroDeGrupos de más.
+    if(((buscarPorGID(&listos, nodo->GID)) == NULL) && (terminoProceso == true)){
+        numeroDeGrupos--;
+    }
     Wk = 1.0 / numeroDeGrupos;
+    if(numeroDeGrupos <= 0){
+        mvprintw(numLineaErrorLista,4, "Numero de grupo negativo o menor a cero %d", numeroDeGrupos);
+        refresh();
+        sleep(2);
+        limpiarLinea(numLineaErrorLista);
+    }
     nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4.0 * Wk) );
     actualizar_PCBs(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
 }
 
 void meterEnTerminados(char linea[]){
     PCB *nodo; 
-    nodo = sacarFrente(&ejecucion); 
+    nodo = sacarFrente(&ejecucion);
+    terminoProceso = true;
     guardarContexto(nodo, linea);
+    terminoProceso = false;
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
@@ -265,12 +278,16 @@ void meterEnTerminados(char linea[]){
 int matar(int num_PID){
     PCB *matar;
     if((matar = buscar_sacar(&listos, num_PID, 0)) != NULL){
+        if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL)){
+            numeroDeGrupos--;
+        }
         insertar(&terminados, matar);
         return 0;
     }
     else if((matar = buscar_sacar(&ejecucion, num_PID, 0)) != NULL){
-        
+        terminoProceso = true;
         guardarContexto(matar, copiaLinea);
+        terminoProceso = false;
         insertar(&terminados, matar);
         return 1;
     }
@@ -383,11 +400,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
+            for(int i = 0; i < 2; i++){
             PID++;
             GID++; 
-            numeroDeGrupos ++;
+            numeroDeGrupos++;
             PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,"0"); // Se agregó
-            insertar(&listos, nuevo); 
+            insertar(&listos, nuevo);
+            }
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
@@ -448,7 +467,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             imprimir(&listos, 1, &numLineaLista);
             imprimir(&terminados, 3, &numLineaLista);
             break;
-            //CAMBIAR checar que CPU y GCPU sean consistentes
 
         }
         else if (comando_to[0] != '\0' || (comando_to[0] == '\0' && archivo_to[0] != '\0')){
@@ -491,7 +509,6 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
     PC = nodo->PC;
     CPU_temp = nodo->CPU;
     GCPU_temp = nodo->GCPU;
-
 }
 
 int main(){
@@ -532,7 +549,7 @@ int main(){
         
         mvprintw(0,4," ");
         refresh();
-        
+        //sleep(3);
         if(ejecuta == false){
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); 
             if(salir == true){
@@ -544,14 +561,14 @@ int main(){
         cortar = false;
 
         if(ejecucion.sig == NULL){
-            // CAMBIAR Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
-            PCB *meterEjecucion = sacarFrente(&listos);
+            //Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
+            PCB *meterEjecucion = buscar_por_prioridad(&listos);
+            //PCB *meterEjecucion = sacarFrente(&listos);
             // Si no hay nada en listos, no meter nada en ejecucion
             if(meterEjecucion == NULL){
                 continue;
-            } 
+            }
             insertar(&ejecucion, meterEjecucion); 
-            
         }
         
         PCB *archivo = ejecucion.sig; 
@@ -577,7 +594,7 @@ int main(){
         imprimir(&terminados, 3, &numLineaLista);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX");
-        mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX         CPU     GCPU");
+        mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
         refresh();
         int qua = 0;
         //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
@@ -707,6 +724,7 @@ int main(){
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
+            mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
             usleep(500000);
             PC++;
@@ -715,7 +733,7 @@ int main(){
             if(qua == Q && end == false){
                 salidaPorQuantum = true;
                 PCB *nodoEnEjecucion; 
-                nodoEnEjecucion = sacarFrente(&ejecucion); 
+                nodoEnEjecucion = sacarFrente(&ejecucion);
                 guardarContexto(nodoEnEjecucion, copiaLinea);
                 insertar(&listos, nodoEnEjecucion);
                 limpiar();
