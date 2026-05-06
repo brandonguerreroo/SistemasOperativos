@@ -161,3 +161,23 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion){
     }
     return NULL;
 }
+
+PCB *buscarPorGID(PCB *lista, int num_GID){  
+    if(lista->sig == NULL){
+        return NULL;
+    }
+
+    PCB *temp1 = lista;
+    PCB *temp2 = lista->sig;
+
+    while(temp1->sig != NULL){
+        if(temp2->GID == num_GID){
+            return temp2;
+        }
+        else{
+            temp1= temp1->sig;
+            temp2= temp2->sig;
+        }
+    }
+    return NULL;
+}
