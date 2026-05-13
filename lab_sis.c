@@ -247,7 +247,6 @@ void guardarContexto(PCB *nodo, char linea[])
     nodo->PC = PC;
     nodo->CPU = CPU_temp / 2;  //Actualizar los valores para este nodo
     nodo->GCPU = GCPU_temp / 2;
-    // CAMBIAR checar por qué no funciona. Resta numeroDeGrupos de más.
     if(((buscarPorGID(&listos, nodo->GID)) == NULL) && (terminoProceso == true)){
         numeroDeGrupos--;
     }
@@ -637,7 +636,7 @@ int main(){
         imprimir(&listos, 1, &numLineaLista);
         imprimir(&terminados, 3, &numLineaLista);
 
-        mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX");
+        mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\tCPU\tGCPU");
         mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
         refresh();
         int qua = 0;
@@ -768,7 +767,7 @@ int main(){
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
-            mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
+            //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos); QUITAR
             refresh();
             usleep(500000);
             PC++;
