@@ -170,8 +170,6 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         }
         if(len == 1 && rv_to[0] == '-') // Caso para cuando solo haya un '-' sin numero
         {
-            mvprintw(6,4,"Hola");
-            refresh();
             caracter = true;
         }
         
@@ -636,7 +634,7 @@ int main(){
         imprimir(&listos, 1, &numLineaLista);
         imprimir(&terminados, 3, &numLineaLista);
 
-        mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\tCPU\tGCPU");
+        mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
         mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
         refresh();
         int qua = 0;
