@@ -182,3 +182,4 @@ PCB *buscarPorGID(PCB *lista, int num_GID){
     }
     return NULL;
 }
+

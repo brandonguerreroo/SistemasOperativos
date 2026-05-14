@@ -30,3 +30,4 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 PCB *buscarPorGID(PCB *lista, int num_GID);
 
 #endif
+
