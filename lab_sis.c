@@ -679,8 +679,6 @@ int main(){
             coma = false;
             espacio = false;
             qua++;
-            CPU_temp += 20;
-            GCPU_temp += 20;
 
             st = linea;
             inst_to[0] = '\0';
@@ -766,6 +764,8 @@ int main(){
                     break;
                 }
                 else{
+                    CPU_temp += 20;
+                    GCPU_temp += 20;
                     meterEnTerminados(copiaLinea);
                     break;
                 }
@@ -777,6 +777,8 @@ int main(){
                 break;
             }
 
+            CPU_temp += 20;
+            GCPU_temp += 20;
             mvprintw(numFilaEjecucion,32,"%d",EAX);
             mvprintw(numFilaEjecucion,48,"%d",EBX);
             mvprintw(numFilaEjecucion,64,"%d",ECX);
