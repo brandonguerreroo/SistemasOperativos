@@ -600,7 +600,6 @@ int main(){
     bool entrar = false;
     bool salidaPorQuantum = false;
 
-    PCB *meterTerminados; 
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -800,7 +799,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            //usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
