@@ -13,7 +13,7 @@ typedef struct PCB {
     struct PCB *sig;
 } PCB;
 
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, size_t tam_arch);
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC);
 
 void insertar(PCB *lista, PCB *nuevo);
 

@@ -367,7 +367,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             limpiar();
-            //PID_no_number = false;
             //Imprimir cada que se mate un proceso
             imprimir(&ejecucion, 2, &numLineaLista);  
             imprimir(&listos, 1, &numLineaLista);
@@ -403,7 +402,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             PID++;
             GID++; 
             numeroDeGrupos++;
-            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,tam_arch); // Se agregó
+            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0); 
             insertar(&listos, nuevo);
             }
             *ejecuta = true;
@@ -467,7 +466,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
                     i++;
                 }
-                // CAMBIAR
+                
                 if (archivoFork != NULL) {
                     if(fclose(archivoFork) != 0) {
                         fprintf(stdout, "Error al cerrar el archivo.\n");
@@ -476,7 +475,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion,tam_arch); // Se agregó
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -493,7 +492,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
                     i++;
                 }
-                // CAMBIAR
+                
                 if (archivoFork != NULL) {
                     if(fclose(archivoFork) != 0) {
                         fprintf(stdout, "Error al cerrar el archivo.\n");
@@ -502,7 +501,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion,tam_arch); // Se agregó
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }

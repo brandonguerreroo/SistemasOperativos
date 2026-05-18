@@ -4,13 +4,13 @@
 #include "LISTAS.h"
 #include <curses.h>
 
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, size_t tam_arch){
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC){
 
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
     nuevo->GID = gid;
     strncpy(nuevo->nombre_proceso, nombre_proceso, sizeof(nuevo->nombre_proceso) - 1);
-    nuevo->nombre_proceso[tam_arch - 1] = '\0';
+    nuevo->nombre_proceso[sizeof(nuevo->nombre_proceso) - 1] = '\0';
     nuevo->PC = PC;
     strncpy(nuevo->IR,"", sizeof(nuevo->IR) - 1);
     nuevo->EAX = 0;
