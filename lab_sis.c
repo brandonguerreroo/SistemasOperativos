@@ -257,8 +257,6 @@ void guardarContexto(PCB *nodo, char linea[])
     }
     nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4.0 * Wk) );
     actualizar_PCBs(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
-    mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
-    refresh();
 }
 
 void meterEnTerminados(char linea[]){
@@ -463,6 +461,14 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             if(((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL)){
                 archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
+                if (archivoFork == NULL) 
+                {
+                    mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    continue;
+                } 
                 while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
                     i++;
                 }
@@ -489,6 +495,14 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
 
             else if((nodoCopiar = buscar_sacar(&listos, procesoPID_fork, 1)) != NULL){
                 archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
+                if (archivoFork == NULL) 
+                {
+                    mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    continue;
+                } 
                 while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
                     i++;
                 }
