@@ -63,7 +63,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
         
         if(numLista == 3){
             mvprintw(*numLinea,4, "%d", temp->PID);
-             mvprintw(*numLinea,10, "%d", temp->GID);
+            mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);

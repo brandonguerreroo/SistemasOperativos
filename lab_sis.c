@@ -237,7 +237,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     
     return 0;
 }
-int JNZ(char reg_to[]){
+int JNZ(char reg_to[], bool *instJNZ){
     int len = strlen(reg_to);
     for(int i = 0; i < len; i++){   
             if (reg_to[i] < '0' || reg_to[i] > '9'){
@@ -249,6 +249,7 @@ int JNZ(char reg_to[]){
     
     if(ECX != 0){
         PC = valor;
+        *instJNZ = true;
     }
     return 0;
 }
@@ -698,8 +699,9 @@ int main(){
         int i = 0;
         entrar = false;
         mataEjecucion = false;
+        instJNZ = false;
         while (((fgets(linea, sizeof(linea), arc_instrucciones)) != NULL)  && (salir == false)){
-            if(entrar == false){
+            if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
                 if(i < PC){
                     i++;
                     continue;
@@ -718,6 +720,7 @@ int main(){
             coma = false;
             espacio = false;
             qua++;
+            instJNZ = false;
 
             st = linea;
             inst_to[0] = '\0';
@@ -796,13 +799,10 @@ int main(){
             }
             else if(strcmp(inst_to,"JNZ") == 0 ){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){     
-                    if(JNZ(reg_to) != 0){
+                    if(JNZ(reg_to, &instJNZ) != 0){
                         meterEnTerminados(copiaLinea);
                         error_archivo = true;
                         break;
-                    }
-                    else{
-                        instJNZ = true;
                     }
                 }
                 else{
@@ -848,8 +848,7 @@ int main(){
             if(instJNZ == false){
                 PC++;
             }
-
-            instJNZ = false;
+            i++; // Independientemente si hay JNZ o no. Cuenta lineas totales para comparar correctamente con el PC.
             coma = false; 
             espacio = false;
             if(qua == Q && end == false){
