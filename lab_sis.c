@@ -248,8 +248,14 @@ int JNZ(char reg_to[], bool *instJNZ){
     int valor = atoi(reg_to);
     
     if(ECX != 0){
+        // CAMBIAR no jala
+        if(valor < PC){ // 
+            rewind(arc_instrucciones);
+        }
         PC = valor;
         *instJNZ = true;
+        
+        
     }
     return 0;
 }
