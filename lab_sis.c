@@ -38,6 +38,7 @@ bool mataEjecucion = false;
 char copiaLinea[64];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
+//char RAM[4096]; // 64 * 64
 int kbhit(void);
 void limpiarLinea(int num)
 {
@@ -201,7 +202,6 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         }
         *destino = *destino / valor;
     }
-
     return 0;
 }
 
@@ -257,8 +257,6 @@ void guardarContexto(PCB *nodo, char linea[])
     }
     nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4.0 * Wk) );
     actualizar_PCBs(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
-    mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
-    refresh();
 }
 
 void meterEnTerminados(char linea[]){
@@ -367,7 +365,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             limpiar();
-            //PID_no_number = false;
             //Imprimir cada que se mate un proceso
             imprimir(&ejecucion, 2, &numLineaLista);  
             imprimir(&listos, 1, &numLineaLista);
@@ -399,11 +396,11 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            for(int i = 0; i < 2; i++){
+            for(int i = 0; i < 1; i++){
             PID++;
             GID++; 
             numeroDeGrupos++;
-            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,"0"); // Se agregó
+            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0); 
             insertar(&listos, nuevo);
             }
             *ejecuta = true;
@@ -464,10 +461,18 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             if(((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL)){
                 archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
+                if (archivoFork == NULL) 
+                {
+                    mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    continue;
+                } 
                 while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
                     i++;
                 }
-                // CAMBIAR
+                
                 if (archivoFork != NULL) {
                     if(fclose(archivoFork) != 0) {
                         fprintf(stdout, "Error al cerrar el archivo.\n");
@@ -476,7 +481,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion,"0"); // Se agregó
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -490,10 +495,18 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
 
             else if((nodoCopiar = buscar_sacar(&listos, procesoPID_fork, 1)) != NULL){
                 archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
+                if (archivoFork == NULL) 
+                {
+                    mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    continue;
+                } 
                 while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
                     i++;
                 }
-                // CAMBIAR
+                
                 if (archivoFork != NULL) {
                     if(fclose(archivoFork) != 0) {
                         fprintf(stdout, "Error al cerrar el archivo.\n");
@@ -502,7 +515,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion,"0"); // Se agregó
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }
@@ -587,7 +600,6 @@ int main(){
     bool entrar = false;
     bool salidaPorQuantum = false;
 
-    PCB *meterTerminados; 
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -676,9 +688,9 @@ int main(){
                     break;
                 }
             }
+            coma = false;
+            espacio = false;
             qua++;
-            CPU_temp += 20;
-            GCPU_temp += 20;
 
             st = linea;
             inst_to[0] = '\0';
@@ -764,6 +776,8 @@ int main(){
                     break;
                 }
                 else{
+                    CPU_temp += 20;
+                    GCPU_temp += 20;
                     meterEnTerminados(copiaLinea);
                     break;
                 }
@@ -775,15 +789,17 @@ int main(){
                 break;
             }
 
+            CPU_temp += 20;
+            GCPU_temp += 20;
             mvprintw(numFilaEjecucion,32,"%d",EAX);
             mvprintw(numFilaEjecucion,48,"%d",EBX);
             mvprintw(numFilaEjecucion,64,"%d",ECX);
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
-            mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
+            //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            //usleep(500000);
             PC++;
             coma = false; 
             espacio = false;
