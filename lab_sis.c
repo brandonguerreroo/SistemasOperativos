@@ -38,7 +38,7 @@ bool mataEjecucion = false;
 char copiaLinea[64];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
-//char RAM[4096]; // 64 * 64
+char RAM[4096]; // 64 * 64
 int kbhit(void);
 void limpiarLinea(int num)
 {
@@ -114,6 +114,18 @@ int cerrarArch_error(int num){
             break;
         case 10:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga (revisar archivo)", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 11:
+             mvprintw(numLineaErrorLista,4,"%s\t%d\tPC no valido en instruccion JNZ", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 12:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -223,6 +235,21 @@ int INC_DEC(char inst_to[], char reg_to[]){
         (*destino)--;
     }
     
+    return 0;
+}
+int JNZ(char reg_to[]){
+    int len = strlen(reg_to);
+    for(int i = 0; i < len; i++){   
+            if (reg_to[i] < '0' || reg_to[i] > '9'){
+                cerrarArch_error(11);
+                return 1;
+            }
+    }
+    int valor = atoi(reg_to);
+    
+    if(ECX != 0){
+        PC = valor;
+    }
     return 0;
 }
 
@@ -599,7 +626,7 @@ int main(){
     bool error_archivo = false;
     bool entrar = false;
     bool salidaPorQuantum = false;
-
+    bool instJNZ = false;
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -767,6 +794,24 @@ int main(){
                     break;
                 }       
             }
+            else if(strcmp(inst_to,"JNZ") == 0 ){
+                if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){     
+                    if(JNZ(reg_to) != 0){
+                        meterEnTerminados(copiaLinea);
+                        error_archivo = true;
+                        break;
+                    }
+                    else{
+                        instJNZ = true;
+                    }
+                }
+                else{
+                    cerrarArch_error(12);
+                    meterEnTerminados(copiaLinea);
+                    error_archivo = true;
+                    break;
+                }       
+            }
             else if(strcmp(inst_to,"END") == 0){
                 end = true;
                 if((reg_to[0] != '\0') || (rv_to[0] != '\0') || (espacio == true)){
@@ -800,7 +845,11 @@ int main(){
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
             //usleep(500000);
-            PC++;
+            if(instJNZ == false){
+                PC++;
+            }
+
+            instJNZ = false;
             coma = false; 
             espacio = false;
             if(qua == Q && end == false){
