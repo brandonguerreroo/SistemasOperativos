@@ -38,6 +38,7 @@ bool mataEjecucion = false;
 char copiaLinea[64];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
+char RAM[4096]; // 64 * 64
 int kbhit(void);
 void limpiarLinea(int num)
 {
@@ -113,6 +114,18 @@ int cerrarArch_error(int num){
             break;
         case 10:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga (revisar archivo)", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 11:
+             mvprintw(numLineaErrorLista,4,"%s\t%d\tPC no valido en instruccion JNZ", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 12:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -201,7 +214,6 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         }
         *destino = *destino / valor;
     }
-
     return 0;
 }
 
@@ -223,6 +235,27 @@ int INC_DEC(char inst_to[], char reg_to[]){
         (*destino)--;
     }
     
+    return 0;
+}
+int JNZ(char reg_to[], bool *instJNZ, int *i){
+    int len = strlen(reg_to);
+    for(int j = 0; j < len; j++){   
+            if (reg_to[j] < '0' || reg_to[j] > '9'){
+                cerrarArch_error(11);
+                return 1;
+            }
+    }
+    int valor = atoi(reg_to);
+    
+    if(ECX != 0){
+        // CAMBIAR no jala
+        //if(valor <= PC){ // 
+            *i = 0;
+            rewind(arc_instrucciones);
+        //}
+        PC = valor;
+        *instJNZ = true;
+    }
     return 0;
 }
 
@@ -599,7 +632,7 @@ int main(){
     bool error_archivo = false;
     bool entrar = false;
     bool salidaPorQuantum = false;
-
+    bool instJNZ = false;
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -671,8 +704,9 @@ int main(){
         int i = 0;
         entrar = false;
         mataEjecucion = false;
+        instJNZ = false;
         while (((fgets(linea, sizeof(linea), arc_instrucciones)) != NULL)  && (salir == false)){
-            if(entrar == false){
+            if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
                 if(i < PC){
                     i++;
                     continue;
@@ -691,6 +725,7 @@ int main(){
             coma = false;
             espacio = false;
             qua++;
+            instJNZ = false;
 
             st = linea;
             inst_to[0] = '\0';
@@ -767,6 +802,21 @@ int main(){
                     break;
                 }       
             }
+            else if(strcmp(inst_to,"JNZ") == 0 ){
+                if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){     
+                    if(JNZ(reg_to, &instJNZ, &i) != 0){
+                        meterEnTerminados(copiaLinea);
+                        error_archivo = true;
+                        break;
+                    }
+                }
+                else{
+                    cerrarArch_error(12);
+                    meterEnTerminados(copiaLinea);
+                    error_archivo = true;
+                    break;
+                }       
+            }
             else if(strcmp(inst_to,"END") == 0){
                 end = true;
                 if((reg_to[0] != '\0') || (rv_to[0] != '\0') || (espacio == true)){
@@ -800,7 +850,10 @@ int main(){
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
             //usleep(500000);
-            PC++;
+            if(instJNZ == false){
+                PC++;
+            }
+            //i++; // Independientemente si hay JNZ o no. Cuenta lineas totales para comparar correctamente con el PC.
             coma = false; 
             espacio = false;
             if(qua == Q && end == false){
