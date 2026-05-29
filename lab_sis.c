@@ -12,6 +12,7 @@
 #include "LISTAS.h"
 
 FILE *arc_instrucciones;
+FILE *memoriaVirtual;
 int EAX = 0; 
 int EBX = 0; 
 int ECX = 0; 
@@ -329,6 +330,7 @@ int matar(int num_PID){
         return 0;
     }
 }
+
 void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta, bool end, size_t tam_arch, int num_ciclo){ 
 
     char cad[50];
@@ -423,17 +425,16 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 limpiarLinea(numLineaErrorLista);
                 continue;
             } 
-            else
-            {
-                fclose(archivo); //Si existe, cerramos archivo y seguimos con lo demas (crear_nodo)
-            }
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
             for(int i = 0; i < 1; i++){
             PID++;
             GID++; 
             numeroDeGrupos++;
-            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0); 
+            // CAMBIAR comprobar espacio en memoria virtual
+            //Meter en IF
+            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0);
+            cargar_a_memoria_virtual(archivo, memoriaVirtual);
             insertar(&listos, nuevo);
             }
             *ejecuta = true;
@@ -640,8 +641,8 @@ int main(){
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
     char basura = 0;
 
-    FILE *memoriaVirtual = fopen("memoriavirtual.bin","wb");
-    
+    memoriaVirtual = fopen("memoriavirtual.bin","wb");
+ 
     if(memoriaVirtual == NULL) {
         printf("Error al crear el archivo.\n");
         return 1;
@@ -650,8 +651,7 @@ int main(){
     for (int i = 0; i < bytesArchivo; i++){
         fwrite(&basura, sizeof(char), 1, memoriaVirtual);
     }
-    fclose(memoriaVirtual);
-
+    
     initscr();
     while (salir == false){
         salir = false;
@@ -688,7 +688,7 @@ int main(){
             insertar(&ejecucion, meterEjecucion); 
         }
         
-        PCB *archivo = ejecucion.sig; 
+        PCB *archivo = ejecucion.sig;
         copiaLinea[0] = '\0';
         restaurarContexto(archivo, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.

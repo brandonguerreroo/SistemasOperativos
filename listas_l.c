@@ -2,10 +2,27 @@
 #include <string.h>
 #include <stdlib.h>
 #include "LISTAS.h"
+#include <math.h>
 #include <curses.h>
 
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC){
+int calcularNumPaginas(FILE *archivo){
+    char linea[64];
+    int i = 0;
+    int numeroDePaginas = 0;
+    while(((fgets(linea, sizeof(linea), archivo)) != NULL)){
+        i++;
+    }
+    numeroDePaginas = ceil(i/tamañoDePagina);
+    return numeroDePaginas;
+}
+void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino){
+    char linea[64];
+    while ((fgets(linea, sizeof(linea), archivoOrigen)) != NULL){
+        fwrite(linea, sizeof(char), 64, archivoDestino);
+    }
+}
 
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC){
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
     nuevo->GID = gid;
