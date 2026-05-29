@@ -2,6 +2,7 @@
 #define LISTAS_H //sirve evita errores si el archivo se incluye varias veces
 
 #include <stdbool.h> //debe ir aqui por el uso del bool
+#define tamañoDePagina 4
 
 typedef struct PCB {
     int PID, GID;
@@ -12,6 +13,15 @@ typedef struct PCB {
     int CPU, GCPU, P; // P es Prioridad.
     struct PCB *sig;
 } PCB;
+// CAMBIAR
+typedef struct TMM {
+    int dueño;
+    bool reloj;
+} TMM;
+
+typedef struct TMP {
+    int numMarcoPagina;
+} TMP;
 
 PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC);
 
@@ -29,4 +39,7 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
 PCB *buscarPorGID(PCB *lista, int num_GID);
 
+int calcularNumPaginas(FILE *archivo);
+
+void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino);
 #endif
