@@ -237,10 +237,10 @@ int INC_DEC(char inst_to[], char reg_to[]){
     
     return 0;
 }
-int JNZ(char reg_to[], bool *instJNZ){
+int JNZ(char reg_to[], bool *instJNZ, int *i){
     int len = strlen(reg_to);
-    for(int i = 0; i < len; i++){   
-            if (reg_to[i] < '0' || reg_to[i] > '9'){
+    for(int j = 0; j < len; j++){   
+            if (reg_to[j] < '0' || reg_to[j] > '9'){
                 cerrarArch_error(11);
                 return 1;
             }
@@ -249,13 +249,12 @@ int JNZ(char reg_to[], bool *instJNZ){
     
     if(ECX != 0){
         // CAMBIAR no jala
-        if(valor < PC){ // 
+        //if(valor <= PC){ // 
+            *i = 0;
             rewind(arc_instrucciones);
-        }
+        //}
         PC = valor;
         *instJNZ = true;
-        
-        
     }
     return 0;
 }
@@ -638,6 +637,21 @@ int main(){
     ejecucion.sig = NULL;
     terminados.sig = NULL;
     
+    int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
+    char basura = 0;
+
+    FILE *memoriaVirtual = fopen("memoriavirtual.bin","wb");
+    
+    if(memoriaVirtual == NULL) {
+        printf("Error al crear el archivo.\n");
+        return 1;
+    }
+
+    for (int i = 0; i < bytesArchivo; i++){
+        fwrite(&basura, sizeof(char), 1, memoriaVirtual);
+    }
+    fclose(memoriaVirtual);
+
     initscr();
     while (salir == false){
         salir = false;
@@ -805,7 +819,7 @@ int main(){
             }
             else if(strcmp(inst_to,"JNZ") == 0 ){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){     
-                    if(JNZ(reg_to, &instJNZ) != 0){
+                    if(JNZ(reg_to, &instJNZ, &i) != 0){
                         meterEnTerminados(copiaLinea);
                         error_archivo = true;
                         break;
@@ -850,11 +864,11 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            //usleep(500000);
+            usleep(500000);
             if(instJNZ == false){
                 PC++;
             }
-            i++; // Independientemente si hay JNZ o no. Cuenta lineas totales para comparar correctamente con el PC.
+            //i++; // Independientemente si hay JNZ o no. Cuenta lineas totales para comparar correctamente con el PC.
             coma = false; 
             espacio = false;
             if(qua == Q && end == false){

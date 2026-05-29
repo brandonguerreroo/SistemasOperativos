@@ -10,8 +10,11 @@ typedef struct PCB {
     char IR[64];
     int EAX,EBX,ECX,EDX;
     int CPU, GCPU, P; // P es Prioridad.
+    int TMP[32768]; // 2 ^15
     struct PCB *sig;
 } PCB;
+
+int TMM[32768][2];
 
 PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC);
 
