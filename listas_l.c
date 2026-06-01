@@ -5,29 +5,7 @@
 #include <math.h>
 #include <curses.h>
 
-int calcularNumPaginas(FILE *archivo){
-    char linea[64];
-    int i = 0;
-    int numeroDePaginas = 0;
-    while(((fgets(linea, sizeof(linea), archivo)) != NULL)){
-        i++;
-    }
-    numeroDePaginas = ceil(i/tamañoDePagina);
-    return numeroDePaginas;
-}
-void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino){
-    char linea[64];
-    while ((fgets(linea, sizeof(linea), archivoOrigen)) != NULL){
-        size_t len = strlen(linea);
-        if (len < 64) {
-            memset(linea + len, '\n', 1);
-            memset(linea + len + 1, '0', 64 - len - 1);
-        }
-        fwrite(linea, sizeof(char), 64, archivoDestino);
-    }
-}
-
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC){
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar){
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
     nuevo->GID = gid;
@@ -42,6 +20,11 @@ PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC){
     nuevo->CPU = 0;
     nuevo->GCPU = 0;
     nuevo->P = 60;
+    if(nodoCopiar == NULL){
+        nuevo->paginas = malloc(numeroPaginas * sizeof(*nuevo->paginas));
+    }else{
+        nuevo->paginas = nodoCopiar->paginas;
+    }
     nuevo->sig = NULL; //el sig del nodo nuevo debe apuntar a nulo porque lo vamos a insertar al final
     return nuevo;
 }

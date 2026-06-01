@@ -40,6 +40,8 @@ char copiaLinea[64];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
 char RAM[4096]; // 64 * 64
+int TMS[marcosSWAP] = {0};
+
 int kbhit(void);
 void limpiarLinea(int num)
 {
@@ -343,6 +345,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
     int procesoPID_mata, procesoPID_fork;
     bool noinst_no_number = false;
     int numeroDeInstruccion;
+    int numeroPaginas;
     while(*cortar == false){    
 
         comando_to[0] = '\0';
@@ -411,6 +414,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             break;
         }
         else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0') && (noinst[0] == '\0')){
+            int numeroDeInstrucciones;
             move(5,0);
             clrtoeol();
             move(numFilaEjecucion,0);
@@ -427,16 +431,32 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             } 
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            for(int i = 0; i < 1; i++){
-            PID++;
-            GID++; 
-            numeroDeGrupos++;
-            // CAMBIAR comprobar espacio en memoria virtual
-            //Meter en IF
-            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0);
-            cargar_a_memoria_virtual(archivo, memoriaVirtual);
-            insertar(&listos, nuevo);
+            //for(int i = 0; i < 1; i++){
+            numeroDeInstrucciones = calcularInstrucciones(archivo);
+            numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
+            //CAMBIAR checar numero de paginas
+            mvprintw(numLineaErrorLista,4,"%d", numeroPaginas);
+            refresh();
+            sleep(2);
+
+            int paginasLibres = calcularPaginasLibresSWAP(TMS);
+            if(paginasLibres >= numeroPaginas){
+                PID++;
+                GID++; 
+                numeroDeGrupos++;
+                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
+                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS);
+                insertar(&listos, nuevo);
+                fclose(archivo);
+            }else{
+                mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
+                refresh();
+                sleep(1);
+                limpiarLinea(numLineaErrorLista);
+                fclose(archivo);
+                continue;
             }
+            //}
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
@@ -515,7 +535,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
+                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -549,7 +570,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
+                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }
@@ -865,7 +887,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            usleep(5000);
             if(instJNZ == false){
                 PC++;
             }
