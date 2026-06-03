@@ -9,7 +9,7 @@
 
 int calcularPaginasLibresSWAP(int TMS[]){
     int paginasLibresSWAP = 0;
-    for(int i = 0; i <= marcosSWAP; i++){
+    for(int i = 0; i < marcosSWAP; i++){
         if(TMS[i] == 0){
             paginasLibresSWAP++;
         }
@@ -26,25 +26,24 @@ int calcularInstrucciones(FILE *archivo){
 }
 int calcularNumPaginas(int numeroInstrucciones){
     int numeroDePaginas;
-    numeroDePaginas = ceil((float) numeroInstrucciones/ tamañoDePagina);
+    numeroDePaginas = ceil(numeroInstrucciones/(float)tamañoDePagina);
     return numeroDePaginas;
 }
 int buscarMarcoPaginaLibreSWAP(int TMS[]){
-    for(int i = 0; i <= marcosSWAP; i++){
+    for(int i = 0; i < marcosSWAP; i++){
         if(TMS[i] == 0){
             return i;
         }
     }
     return -1; //Nunca llega aqui
 }
-void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[]){
+void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], int PID){
     char linea[64];
     int marcoLibre;
     int contador = 0;
-    for(int i = 0; i < numPaginas; i++){ 
+    rewind(archivoOrigen); //Como contamos las lineas el puntero quedaba al final
+    for(int i = 0; i < (numPaginas); i++){
         marcoLibre = buscarMarcoPaginaLibreSWAP(TMS);
-        //char buffer[marcoLibre * 4 * 64];
-        //fread(buffer, 1, marcoLibre * 4 * 64, archivoDestino); 
         fseek(archivoDestino, marcoLibre * 4 * 64, SEEK_SET); // Adelanta el archivo marcoLibre * 4 * 64 bytes desde el inicio
         while ((fgets(linea, sizeof(linea), archivoOrigen)) != NULL){
             size_t len = strlen(linea);
@@ -57,6 +56,17 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
                 contador = 0;
                 break;
             }
+            
         }
+        TMS[marcoLibre] = PID;
+    }
+    fclose(archivoDestino);
+    archivoDestino = NULL;
+}
+void imprimirTMS(int TMS[]){
+    for(int i = 0; i < marcosSWAP; i++){
+        mvprintw(5,4 + i,"%d", TMS[i]);  //CAMBIAR
+        refresh();
+        sleep(1);
     }
 }

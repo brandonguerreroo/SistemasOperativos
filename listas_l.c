@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "LISTAS.h"
-#include <math.h>
 #include <curses.h>
 
 PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar){

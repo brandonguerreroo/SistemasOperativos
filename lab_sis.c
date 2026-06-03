@@ -41,6 +41,7 @@ bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar 
 
 char RAM[4096]; // 64 * 64
 int TMS[marcosSWAP] = {0};
+char nombreArchivoSWAP[] = "memoriavirtual.bin";
 
 int kbhit(void);
 void limpiarLinea(int num)
@@ -251,7 +252,6 @@ int JNZ(char reg_to[], bool *instJNZ, int *i){
     int valor = atoi(reg_to);
     
     if(ECX != 0){
-        // CAMBIAR no jala
         //if(valor <= PC){ // 
             *i = 0;
             rewind(arc_instrucciones);
@@ -420,6 +420,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
+            memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
             if (archivo == NULL) 
             {
@@ -434,10 +435,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             //for(int i = 0; i < 1; i++){
             numeroDeInstrucciones = calcularInstrucciones(archivo);
             numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
-            //CAMBIAR checar numero de paginas
-            mvprintw(numLineaErrorLista,4,"%d", numeroPaginas);
-            refresh();
-            sleep(2);
 
             int paginasLibres = calcularPaginasLibresSWAP(TMS);
             if(paginasLibres >= numeroPaginas){
@@ -445,7 +442,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 GID++; 
                 numeroDeGrupos++;
                 PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
-                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS);
+                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo->PID);
+                //imprimirTMS(TMS);
                 insertar(&listos, nuevo);
                 fclose(archivo);
             }else{
@@ -661,9 +659,9 @@ int main(){
     terminados.sig = NULL;
     
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
-    char basura = 0;
+    char basura = ' ';
 
-    memoriaVirtual = fopen("memoriavirtual.bin","wb");
+    memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
  
     if(memoriaVirtual == NULL) {
         printf("Error al crear el archivo.\n");
@@ -673,7 +671,8 @@ int main(){
     for (int i = 0; i < bytesArchivo; i++){
         fwrite(&basura, sizeof(char), 1, memoriaVirtual);
     }
-    rewind(memoriaVirtual);
+    fclose(memoriaVirtual);
+    memoriaVirtual = NULL;
     
     initscr();
     while (salir == false){
@@ -938,7 +937,7 @@ int main(){
         }
     }
     endwin();
-    fclose(memoriaVirtual);
+    //fclose(memoriaVirtual);
     return 0;
 }
 
