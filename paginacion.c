@@ -37,7 +37,7 @@ int buscarMarcoPaginaLibreSWAP(int TMS[]){
     }
     return -1; //Nunca llega aqui
 }
-void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], int PID){
+void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso){
     char linea[64];
     int marcoLibre;
     int contador = 0;
@@ -58,7 +58,10 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
             }
             
         }
-        TMS[marcoLibre] = PID;
+        TMS[marcoLibre] = proceso->PID;
+        proceso->paginas[i][0] = 0;
+        proceso->paginas[i][1] = 0;
+        proceso->paginas[i][3] = marcoLibre;
     }
     fclose(archivoDestino);
     archivoDestino = NULL;

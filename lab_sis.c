@@ -442,7 +442,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 GID++; 
                 numeroDeGrupos++;
                 PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
-                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo->PID);
+                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
                 //imprimirTMS(TMS);
                 insertar(&listos, nuevo);
                 fclose(archivo);
@@ -715,7 +715,8 @@ int main(){
         restaurarContexto(archivo, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-        
+
+
         arc_instrucciones = fopen(archivo->nombre_proceso, "r");
         if (arc_instrucciones == NULL){
             mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");

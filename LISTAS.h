@@ -41,7 +41,7 @@ int calcularNumPaginas(int numeroInstrucciones);
 
 int buscarMarcoPaginaLibreSWAP(int TMS[]);
 
-void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], int PID);
+void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso);
 
 void imprimirTMS(int TMS[]);
 
