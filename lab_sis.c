@@ -659,7 +659,6 @@ int main(){
     ejecucion.sig = NULL;
     terminados.sig = NULL;
     int pagina_instruccion;
-    int marco_de_la_pagina_en_swap;
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
     char basura = ' ';
 
@@ -717,10 +716,15 @@ int main(){
         restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-        pagina_instruccion = (nodo_a_ejecutar->PC)/4;
+        //CAMBIAR
+        /*pagina_instruccion = (nodo_a_ejecutar->PC)/4;
         if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-            marco_de_la_pagina_en_swap = nodo_a_ejecutar->paginas[pagina_instruccion][3]; 
-        }
+            memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
+            cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+            imprimirTMM(TMM);
+            fclose(memoriaVirtual);
+            memoriaVirtual = NULL;
+        }*/
         
         arc_instrucciones = fopen(nodo_a_ejecutar->nombre_proceso, "r");
         if (arc_instrucciones == NULL){
@@ -765,6 +769,16 @@ int main(){
                     break;
                 }
             }
+
+            pagina_instruccion = PC/4;
+            if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
+                memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+                imprimirTMM(TMM);
+                fclose(memoriaVirtual);
+                memoriaVirtual = NULL;
+            }
+
             coma = false;
             espacio = false;
             qua++;
@@ -784,7 +798,7 @@ int main(){
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
             strncpy(copiaLinea, linea, sizeof(copiaLinea) - 1);
             copiaLinea[sizeof(copiaLinea)-1] = '\0';
-
+            imprimirTMM(TMM);
             mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
 
@@ -944,6 +958,7 @@ int main(){
     }
     endwin();
     //fclose(memoriaVirtual);
+    //imprimirTMM(TMM);
     return 0;
 }
 

@@ -35,6 +35,12 @@ PCB *buscarPorGID(PCB *lista, int num_GID);
 
 int calcularPaginasLibresSWAP(int TMS[]);
 
+int buscarMarcoPaginaLibreRAM(int TMM[]);
+
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion);
+
+void imprimirTMM(int TMM[]);
+
 int calcularInstrucciones(FILE *archivo);
 
 int calcularNumPaginas(int numeroInstrucciones);
