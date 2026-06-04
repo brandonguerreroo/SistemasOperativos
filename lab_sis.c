@@ -40,6 +40,10 @@ char copiaLinea[64];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
 char RAM[4096]; // 64 * 64
+int TMS[marcosSWAP] = {0};
+int TMM[marcosRAM] = {0};
+char nombreArchivoSWAP[] = "memoriavirtual.bin";
+
 int kbhit(void);
 void limpiarLinea(int num)
 {
@@ -249,7 +253,6 @@ int JNZ(char reg_to[], bool *instJNZ, int *i){
     int valor = atoi(reg_to);
     
     if(ECX != 0){
-        // CAMBIAR no jala
         //if(valor <= PC){ // 
             *i = 0;
             rewind(arc_instrucciones);
@@ -343,6 +346,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
     int procesoPID_mata, procesoPID_fork;
     bool noinst_no_number = false;
     int numeroDeInstruccion;
+    int numeroPaginas;
     while(*cortar == false){    
 
         comando_to[0] = '\0';
@@ -411,12 +415,14 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             break;
         }
         else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0') && (noinst[0] == '\0')){
+            int numeroDeInstrucciones;
             move(5,0);
             clrtoeol();
             move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
-            FILE *archivo = fopen(archivo_to, "r"); //Nos sirve para poder comprobar que el archivo exista
+            memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
+            FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
             if (archivo == NULL) 
             {
                 mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
@@ -427,16 +433,29 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             } 
             strncpy(nombre_archivo, archivo_to, tam_arch - 1);
             nombre_archivo[tam_arch - 1] = '\0';
-            for(int i = 0; i < 1; i++){
-            PID++;
-            GID++; 
-            numeroDeGrupos++;
-            // CAMBIAR comprobar espacio en memoria virtual
-            //Meter en IF
-            PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0);
-            cargar_a_memoria_virtual(archivo, memoriaVirtual);
-            insertar(&listos, nuevo);
+            //for(int i = 0; i < 1; i++){
+            numeroDeInstrucciones = calcularInstrucciones(archivo);
+            numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
+
+            int paginasLibres = calcularPaginasLibresSWAP(TMS);
+            if(paginasLibres >= numeroPaginas){
+                PID++;
+                GID++; 
+                numeroDeGrupos++;
+                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
+                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
+                //imprimirTMS(TMS);
+                insertar(&listos, nuevo);
+                fclose(archivo);
+            }else{
+                mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
+                refresh();
+                sleep(1);
+                limpiarLinea(numLineaErrorLista);
+                fclose(archivo);
+                continue;
             }
+            //}
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
@@ -515,7 +534,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
+                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -549,7 +569,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion); 
+                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }
@@ -637,11 +658,12 @@ int main(){
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
-    
+    int pagina_instruccion;
+    int marco_de_la_pagina_en_swap;
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
-    char basura = 0;
+    char basura = ' ';
 
-    memoriaVirtual = fopen("memoriavirtual.bin","wb");
+    memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
  
     if(memoriaVirtual == NULL) {
         printf("Error al crear el archivo.\n");
@@ -651,6 +673,8 @@ int main(){
     for (int i = 0; i < bytesArchivo; i++){
         fwrite(&basura, sizeof(char), 1, memoriaVirtual);
     }
+    fclose(memoriaVirtual);
+    memoriaVirtual = NULL;
     
     initscr();
     while (salir == false){
@@ -688,13 +712,17 @@ int main(){
             insertar(&ejecucion, meterEjecucion); 
         }
         
-        PCB *archivo = ejecucion.sig;
+        PCB *nodo_a_ejecutar = ejecucion.sig;
         copiaLinea[0] = '\0';
-        restaurarContexto(archivo, linea, sizeof(linea));
-        strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
+        restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
+        strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
+        pagina_instruccion = (nodo_a_ejecutar->PC)/4;
+        if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
+            marco_de_la_pagina_en_swap = nodo_a_ejecutar->paginas[pagina_instruccion][3]; 
+        }
         
-        arc_instrucciones = fopen(archivo->nombre_proceso, "r");
+        arc_instrucciones = fopen(nodo_a_ejecutar->nombre_proceso, "r");
         if (arc_instrucciones == NULL){
             mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
             meterEnTerminados(copiaLinea);
@@ -864,7 +892,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            usleep(5000);
             if(instJNZ == false){
                 PC++;
             }
@@ -915,6 +943,7 @@ int main(){
         }
     }
     endwin();
+    //fclose(memoriaVirtual);
     return 0;
 }
 
