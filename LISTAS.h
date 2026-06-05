@@ -5,6 +5,11 @@
 #define tamañoDePagina 4
 #define marcosSWAP 32768
 #define marcosRAM 16
+#define numLineaErrorLista 5
+#define numLineaComando 4
+#define numFilaEjecucion 2
+#define tam_linea 64
+
 typedef struct PCB {
     int PID, GID;
     char nombre_proceso[50];

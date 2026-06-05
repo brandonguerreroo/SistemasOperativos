@@ -29,14 +29,11 @@ int GCPU_temp = 0;
 PCB listos;
 PCB ejecucion;
 PCB terminados;
-int numLineaErrorLista = 5;
-int numLineaComando = 4;
-int numFilaEjecucion = 2;
 int numLineaLista = 8;
 char copiaNombre_archivo[50];
 int Q = 3;
 bool mataEjecucion = false;
-char copiaLinea[64];
+char copiaLinea[65];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
 char RAM[4096]; // 64 * 64
@@ -342,7 +339,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
     char comando_to[10];
     char archivo_to[50];
     char noinst[50];
-    int numFilaEjecucion = 2;
     int procesoPID_mata, procesoPID_fork;
     bool noinst_no_number = false;
     int numeroDeInstruccion;
@@ -442,6 +438,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 GID++; 
                 numeroDeGrupos++;
                 PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
+                limpiarLinea(6);
                 cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
                 //imprimirTMS(TMS);
                 insertar(&listos, nuevo);
@@ -624,13 +621,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
     }
 }
 
-void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
+void restaurarContexto(PCB *nodo, char linea[], size_t size_linea)
 {
     EAX = nodo->EAX;
     EBX = nodo->EBX;
     ECX = nodo->ECX;
     EDX = nodo->EDX;
-    strncpy(linea,nodo->IR, tam_linea - 1);
+    strncpy(linea,nodo->IR, size_linea - 1);
     linea[tam_linea - 1] = '\0';
     PC = nodo->PC;
     CPU_temp = nodo->CPU;
@@ -639,7 +636,7 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
 
 int main(){
 
-    char linea[64];
+    char linea[65];
     char *token;
     char inst_to[5];
     char reg_to[5];
@@ -660,6 +657,9 @@ int main(){
     ejecucion.sig = NULL;
     terminados.sig = NULL;
     int pagina_instruccion;
+    int desplazamiento;
+    int marcoRAM;
+    int direccionFisica;
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
     char basura = ' ';
 
@@ -749,28 +749,35 @@ int main(){
         entrar = false;
         mataEjecucion = false;
         instJNZ = false;
-        while (((fgets(linea, sizeof(linea), arc_instrucciones)) != NULL)  && (salir == false)){
-            if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
+        while (salir == false){
+            /*if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
                 if(i < PC){
                     i++;
                     continue;
                 }
                 entrar = true;
-            }
-            if(strchr(linea, '\n') == NULL){ //busca \n en linea si no lo encuentra la linea es mas larga de lo que se permite
-                int c;
-                if((c = fgetc(arc_instrucciones)) != EOF){ //por si es el caso de la linea END ya que no tiene \n al final
-                    meterEnTerminados(copiaLinea);
-                    cerrarArch_error(10);
-                    error_archivo = true;
-                    break;
-                }
-            }
-
+            }*/
             pagina_instruccion = PC/4;
+            desplazamiento = PC%4;
+
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
                 cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
-                imprimirTMM(TMM);
+                //imprimirTMM(TMM);
+                //CAMBIAR cuando se llena la RAM ya no se puede salir
+                continue;
+            }
+            else{
+                marcoRAM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
+                direccionFisica = (marcoRAM * 4 * tam_linea) + (desplazamiento * tam_linea);
+                strncpy(linea, RAM + direccionFisica, 64);
+                linea[64] = '\0';
+            }
+
+            if(strchr(linea, '\n') == NULL){ //busca \n en linea si no lo encuentra la linea es mas larga de lo que se permite
+                meterEnTerminados(copiaLinea);
+                cerrarArch_error(10);
+                error_archivo = true;
+                break;
             }
 
             coma = false;
@@ -900,7 +907,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(5000);
+            usleep(90000);
             if(instJNZ == false){
                 PC++;
             }

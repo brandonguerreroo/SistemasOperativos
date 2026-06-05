@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "LISTAS.h"
 #include <curses.h>
+#include <unistd.h>
 
 PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar){
     PCB *nuevo = malloc(sizeof(PCB));
@@ -21,6 +22,11 @@ PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPagin
     nuevo->P = 60;
     if(nodoCopiar == NULL){
         nuevo->paginas = malloc(numeroPaginas * sizeof(*nuevo->paginas));
+        if (nuevo->paginas == NULL) {
+            mvprintw(numLineaErrorLista,4,"Error: Memoria insuficiente");
+            refresh();
+            sleep(1);
+        }
     }else{
         nuevo->paginas = nodoCopiar->paginas;
     }
@@ -67,7 +73,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
         
         if(numLista == 3){
             mvprintw(*numLinea,4, "%d", temp->PID);
-             mvprintw(*numLinea,10, "%d", temp->GID);
+            mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
