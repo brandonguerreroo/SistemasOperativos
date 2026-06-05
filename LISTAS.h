@@ -4,7 +4,7 @@
 #include <stdbool.h> //debe ir aqui por el uso del bool
 #define tamañoDePagina 4
 #define marcosSWAP 32768
-
+#define marcosRAM 16
 typedef struct PCB {
     int PID, GID;
     char nombre_proceso[50];
@@ -16,6 +16,8 @@ typedef struct PCB {
     int (*paginas)[3];
     struct PCB *sig;
 } PCB;
+
+void limpiarLinea(int num);
 
 PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar);
 
@@ -34,6 +36,12 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 PCB *buscarPorGID(PCB *lista, int num_GID);
 
 int calcularPaginasLibresSWAP(int TMS[]);
+
+int buscarMarcoPaginaLibreRAM(int TMM[]);
+
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion);
+
+void imprimirTMM(int TMM[]);
 
 int calcularInstrucciones(FILE *archivo);
 

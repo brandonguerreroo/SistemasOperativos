@@ -41,6 +41,7 @@ bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar 
 
 char RAM[4096]; // 64 * 64
 int TMS[marcosSWAP] = {0};
+int TMM[marcosRAM] = {0};
 char nombreArchivoSWAP[] = "memoriavirtual.bin";
 
 int kbhit(void);
@@ -420,7 +421,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
-            memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
             if (archivo == NULL) 
             {
@@ -446,12 +446,14 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 //imprimirTMS(TMS);
                 insertar(&listos, nuevo);
                 fclose(archivo);
+                archivo = NULL;
             }else{
                 mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
                 refresh();
                 sleep(1);
                 limpiarLinea(numLineaErrorLista);
                 fclose(archivo);
+                archivo = NULL;
                 continue;
             }
             //}
@@ -657,7 +659,7 @@ int main(){
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
-    
+    int pagina_instruccion;
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
     char basura = ' ';
 
@@ -671,8 +673,7 @@ int main(){
     for (int i = 0; i < bytesArchivo; i++){
         fwrite(&basura, sizeof(char), 1, memoriaVirtual);
     }
-    fclose(memoriaVirtual);
-    memoriaVirtual = NULL;
+    rewind(memoriaVirtual);
     
     initscr();
     while (salir == false){
@@ -710,14 +711,19 @@ int main(){
             insertar(&ejecucion, meterEjecucion); 
         }
         
-        PCB *archivo = ejecucion.sig;
+        PCB *nodo_a_ejecutar = ejecucion.sig;
         copiaLinea[0] = '\0';
-        restaurarContexto(archivo, linea, sizeof(linea));
-        strncpy(copiaNombre_archivo, archivo->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
+        restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
+        strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-
-
-        arc_instrucciones = fopen(archivo->nombre_proceso, "r");
+        //CAMBIAR
+        /*pagina_instruccion = (nodo_a_ejecutar->PC)/4;
+        if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
+            cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+            imprimirTMM(TMM);
+        }*/
+        
+        arc_instrucciones = fopen(nodo_a_ejecutar->nombre_proceso, "r");
         if (arc_instrucciones == NULL){
             mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
             meterEnTerminados(copiaLinea);
@@ -760,6 +766,13 @@ int main(){
                     break;
                 }
             }
+
+            pagina_instruccion = PC/4;
+            if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+                imprimirTMM(TMM);
+            }
+
             coma = false;
             espacio = false;
             qua++;
@@ -779,7 +792,7 @@ int main(){
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
             strncpy(copiaLinea, linea, sizeof(copiaLinea) - 1);
             copiaLinea[sizeof(copiaLinea)-1] = '\0';
-
+            imprimirTMM(TMM);
             mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
 
@@ -938,7 +951,9 @@ int main(){
         }
     }
     endwin();
-    //fclose(memoriaVirtual);
+    fclose(memoriaVirtual);
+    memoriaVirtual = NULL;
+    //imprimirTMM(TMM);
     return 0;
 }
 
