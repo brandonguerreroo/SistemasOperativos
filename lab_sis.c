@@ -439,18 +439,28 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
 
             int paginasLibres = calcularPaginasLibresSWAP(TMS);
+            PCB *nuevo;
+            if(numeroPaginas <= marcosSWAP){
+                nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
+                insertar(&nuevos, nuevo);
+            }
+            else{
+                mvprintw(numLineaErrorLista,4, "ERROR. Archivo no cabe en el SWAP");
+                refresh();
+                sleep(1);
+            }
+            
             if(paginasLibres >= numeroPaginas){
                 PID++;
                 GID++; 
                 numeroDeGrupos++;
-                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
-                limpiarLinea(6);
                 cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
-                //imprimirTMS(TMS);
+                nuevo = sacarFrente(&nuevos);
                 insertar(&listos, nuevo);
                 fclose(archivo);
                 archivo = NULL;
-            }else{
+            }
+            else{
                 mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
                 refresh();
                 sleep(1);
