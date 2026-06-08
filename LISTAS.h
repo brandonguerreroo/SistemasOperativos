@@ -58,4 +58,6 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void imprimirTMS(int TMS[]);
 
+void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
+
 #endif

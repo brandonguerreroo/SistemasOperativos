@@ -299,6 +299,8 @@ void meterEnTerminados(char linea[]){
     terminoProceso = true;
     guardarContexto(nodo, linea);
     terminoProceso = false;
+    
+    liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
