@@ -29,6 +29,9 @@ int GCPU_temp = 0;
 PCB listos;
 PCB ejecucion;
 PCB terminados;
+PCB nuevos;
+PCB suspendidos;
+
 int numLineaLista = 8;
 char copiaNombre_archivo[50];
 int Q = 3;
@@ -300,6 +303,7 @@ void meterEnTerminados(char linea[]){
     guardarContexto(nodo, linea);
     terminoProceso = false;
     liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
+    cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
@@ -314,6 +318,7 @@ int matar(int num_PID){
             numeroDeGrupos--;
         }
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
         insertar(&terminados, matar);
         return 0;
     }
@@ -434,28 +439,28 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             //for(int i = 0; i < 1; i++){
             numeroDeInstrucciones = calcularInstrucciones(archivo);
             numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
+            fclose(archivo);
+            archivo = NULL;
 
-            int paginasLibres = calcularPaginasLibresSWAP(TMS);
-            if(paginasLibres >= numeroPaginas){
+            PCB *nuevo;
+            if(numeroPaginas <= marcosSWAP){
                 PID++;
                 GID++; 
                 numeroDeGrupos++;
-                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
-                limpiarLinea(6);
-                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
-                //imprimirTMS(TMS);
-                insertar(&listos, nuevo);
-                fclose(archivo);
-                archivo = NULL;
-            }else{
-                mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
+                nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
+                insertar(&nuevos, nuevo);
+            }
+            else{
+                mvprintw(numLineaErrorLista,4, "ERROR. Archivo no cabe en el SWAP");
                 refresh();
                 sleep(1);
-                limpiarLinea(numLineaErrorLista);
-                fclose(archivo);
-                archivo = NULL;
                 continue;
             }
+
+            if(cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS) == 1){
+                continue;
+            }
+
             //}
             *ejecuta = true;
             limpiar();
@@ -659,6 +664,8 @@ int main(){
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
+    nuevos.sig = NULL;
+    suspendidos.sig = NULL;
     int pagina_instruccion;
     int desplazamiento;
     int marcoRAM;

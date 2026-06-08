@@ -95,7 +95,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
             if(i == (numPaginas -1)){   //revisa todo el ultimo marco en busca del END
                 if(strcmp(linea, "END") == 0){
                     linea[3] = '\n';
-                }    
+                }
             }
             size_t len = strlen(linea);
             if (len < 64) {
@@ -137,4 +137,35 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]){
         TMS[marcoSWAP] = 0;    
     }
 
+}
+
+int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
+    int paginasLibres;
+    int numeroPaginas;
+    bool memoriaSuficiente = true;
+
+    while(memoriaSuficiente){
+        if(nuevos->sig == NULL){
+            return 0;
+        }
+        paginasLibres = calcularPaginasLibresSWAP(TMS);
+        numeroPaginas = calcularNumPaginas((nuevos->sig)->numInstrucciones);
+
+        if(paginasLibres >= numeroPaginas){
+            PCB *nuevo = sacarFrente(nuevos);
+            FILE *archivo = fopen(nuevo->nombre_proceso, "rb");
+            cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
+            insertar(listos, nuevo);
+            fclose(archivo);
+            archivo = NULL;
+        }
+        else{
+            memoriaSuficiente = false;
+            mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
+            refresh();
+            sleep(1);
+            limpiarLinea(numLineaErrorLista);
+        }
+    }
+    return 1;
 }

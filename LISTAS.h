@@ -60,4 +60,6 @@ void imprimirTMS(int TMS[]);
 
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
 
+int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
+
 #endif
