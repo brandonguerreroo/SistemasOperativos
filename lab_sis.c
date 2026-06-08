@@ -313,6 +313,7 @@ int matar(int num_PID){
         if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL)){
             numeroDeGrupos--;
         }
+        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
         insertar(&terminados, matar);
         return 0;
     }
@@ -320,6 +321,7 @@ int matar(int num_PID){
         terminoProceso = true;
         guardarContexto(matar, copiaLinea);
         terminoProceso = false;
+        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
         insertar(&terminados, matar);
         return 1;
     }
@@ -957,6 +959,7 @@ int main(){
             cerrarArch_error(5);  
             continue;
         }
+        imprimirTMM(TMM);
     }
     endwin();
     fclose(memoriaVirtual);
