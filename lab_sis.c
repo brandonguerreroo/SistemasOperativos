@@ -303,12 +303,11 @@ void meterEnTerminados(char linea[]){
     guardarContexto(nodo, linea);
     terminoProceso = false;
     liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
+    cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
-    imprimir(&ejecucion, 2, &numLineaLista);
-    imprimir(&listos, 1, &numLineaLista);
-    imprimir(&terminados, 3, &numLineaLista);
+    imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
 }
 int matar(int num_PID){
     PCB *matar;
@@ -317,6 +316,7 @@ int matar(int num_PID){
             numeroDeGrupos--;
         }
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
         insertar(&terminados, matar);
         return 0;
     }
@@ -407,9 +407,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             limpiar();
             //Imprimir cada que se mate un proceso
-            imprimir(&ejecucion, 2, &numLineaLista);  
-            imprimir(&listos, 1, &numLineaLista);
-            imprimir(&terminados, 3, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
         }
         else if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') && (noinst[0] == '\0') ){
             *ejecuta = false;
@@ -437,10 +435,17 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             //for(int i = 0; i < 1; i++){
             numeroDeInstrucciones = calcularInstrucciones(archivo);
             numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
+            
+            if (archivo != NULL){
+                fclose(archivo);
+                archivo = NULL;
+            }
 
-            int paginasLibres = calcularPaginasLibresSWAP(TMS);
             PCB *nuevo;
             if(numeroPaginas <= marcosSWAP){
+                PID++;
+                GID++; 
+                numeroDeGrupos++;
                 nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
                 insertar(&nuevos, nuevo);
             }
@@ -448,34 +453,18 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 mvprintw(numLineaErrorLista,4, "ERROR. Archivo no cabe en el SWAP");
                 refresh();
                 sleep(1);
-            }
-            
-            if(paginasLibres >= numeroPaginas){
-                PID++;
-                GID++; 
-                numeroDeGrupos++;
-                cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
-                nuevo = sacarFrente(&nuevos);
-                insertar(&listos, nuevo);
-                fclose(archivo);
-                archivo = NULL;
-            }
-            else{
-                mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
-                refresh();
-                sleep(1);
-                limpiarLinea(numLineaErrorLista);
-                fclose(archivo);
-                archivo = NULL;
                 continue;
             }
+
+            if(cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS) == 1){
+                continue;
+            }
+
             //}
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
-            imprimir(&ejecucion, 2, &numLineaLista); 
-            imprimir(&listos, 1, &numLineaLista);
-            imprimir(&terminados, 3, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
             break;
         }
         else if((strcmp(comando_to, "fork") == 0) && (archivo_to[0] != '\0') && (noinst[0] != '\0')){
@@ -603,9 +592,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             limpiar();
             //Imprimir cada que se copie un proceso
-            imprimir(&ejecucion, 2, &numLineaLista); 
-            imprimir(&listos, 1, &numLineaLista);
-            imprimir(&terminados, 3, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
             break;
         }
         else if (comando_to[0] != '\0' || (comando_to[0] == '\0' && archivo_to[0] != '\0')){
@@ -651,7 +638,6 @@ void restaurarContexto(PCB *nodo, char linea[], size_t size_linea)
 }
 
 int main(){
-
     char linea[65];
     char *token;
     char inst_to[5];
@@ -672,6 +658,8 @@ int main(){
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
+    nuevos.sig = NULL;
+    suspendidos.sig = NULL;
     int pagina_instruccion;
     int desplazamiento;
     int marcoRAM;
@@ -751,9 +739,7 @@ int main(){
 
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
-        imprimir(&ejecucion, 2, &numLineaLista);
-        imprimir(&listos, 1, &numLineaLista);
-        imprimir(&terminados, 3, &numLineaLista);
+        imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
         mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
@@ -938,9 +924,7 @@ int main(){
                 insertar(&listos, nodoEnEjecucion);
                 limpiar();
                 //Imprimir cada que cambie listos
-                imprimir(&ejecucion, 2, &numLineaLista);
-                imprimir(&listos, 1, &numLineaLista);
-                imprimir(&terminados, 3, &numLineaLista);
+                imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
                 break;
             }
             
@@ -974,9 +958,11 @@ int main(){
         }
         imprimirTMM(TMM);
     }
-    endwin();
-    fclose(memoriaVirtual);
-    memoriaVirtual = NULL;
+    endwin();    
+    if (memoriaVirtual != NULL){
+        fclose(memoriaVirtual);
+        memoriaVirtual = NULL;
+    }
     //imprimirTMM(TMM);
     return 0;
 }

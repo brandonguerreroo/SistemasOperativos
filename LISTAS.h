@@ -40,6 +40,8 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
 PCB *buscarPorGID(PCB *lista, int num_GID);
 
+void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *terminados, int *numLineaLista);
+
 int calcularPaginasLibresSWAP(int TMS[]);
 
 int buscarMarcoPaginaLibreRAM(int TMM[]);
@@ -59,5 +61,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 void imprimirTMS(int TMS[]);
 
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
+
+int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
 
 #endif
