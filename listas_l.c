@@ -107,6 +107,22 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,148, "%d", temp->GCPU);
             refresh();
         }
+        if(numLista == 5){
+            mvprintw(*numLinea,4, "%d", temp->PID);
+            mvprintw(*numLinea,10, "%d", temp->GID);
+            mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,32, "%s","Suspendidos");
+            mvprintw(*numLinea,48, "%d", temp->PC);
+            mvprintw(*numLinea,56, "%s", temp->IR);
+            mvprintw(*numLinea,80, "%d", temp->EAX);
+            mvprintw(*numLinea,96, "%d", temp->EBX);
+            mvprintw(*numLinea,112, "%d", temp->ECX);
+            mvprintw(*numLinea,128, "%d", temp->EDX);
+            mvprintw(*numLinea,136, "%d", temp->P);
+            mvprintw(*numLinea,142, "%d", temp->CPU);
+            mvprintw(*numLinea,148, "%d", temp->GCPU);
+            refresh();
+        }
         (*numLinea)++;
     } 
 }
@@ -213,9 +229,10 @@ PCB *buscarPorGID(PCB *lista, int num_GID){
     return NULL;
 }
 
-void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *terminados, int *numLineaLista){
+void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista){
     imprimir(ejecucion, 2, numLineaLista);
     imprimir(listos, 1, numLineaLista);
     imprimir(nuevos, 4, numLineaLista);
+    imprimir(suspendidos, 5, numLineaLista);
     imprimir(terminados, 3, numLineaLista);
 }

@@ -307,7 +307,7 @@ void meterEnTerminados(char linea[]){
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
-    imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
+    imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
 }
 int matar(int num_PID){
     PCB *matar;
@@ -407,7 +407,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             limpiar();
             //Imprimir cada que se mate un proceso
-            imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         }
         else if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') && (noinst[0] == '\0') ){
             *ejecuta = false;
@@ -464,7 +464,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
-            imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
             break;
         }
         else if((strcmp(comando_to, "fork") == 0) && (archivo_to[0] != '\0') && (noinst[0] != '\0')){
@@ -592,7 +592,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             limpiar();
             //Imprimir cada que se copie un proceso
-            imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
             break;
         }
         else if (comando_to[0] != '\0' || (comando_to[0] == '\0' && archivo_to[0] != '\0')){
@@ -655,6 +655,7 @@ int main(){
     bool entrar = false;
     bool salidaPorQuantum = false;
     bool instJNZ = false;
+    bool entroSuspendidos = false;
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -739,7 +740,7 @@ int main(){
 
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
-        imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
+        imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
         mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
@@ -763,10 +764,14 @@ int main(){
             desplazamiento = PC%4;
 
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+
+                if(cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &ejecucion, &suspendidos) == 0){
+                    continue;
+                }
+                entroSuspendidos = true;
                 //imprimirTMM(TMM);
                 //CAMBIAR cuando se llena la RAM ya no se puede salir
-                continue;
+                break;
             }
             else{
                 marcoRAM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
@@ -909,7 +914,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            usleep(50000);
             if(instJNZ == false){
                 PC++;
             }
@@ -924,7 +929,7 @@ int main(){
                 insertar(&listos, nodoEnEjecucion);
                 limpiar();
                 //Imprimir cada que cambie listos
-                imprimirListas(&ejecucion, &listos, &nuevos, &terminados, &numLineaLista);
+                imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
                 break;
             }
             
@@ -945,10 +950,15 @@ int main(){
             salir = false;
             continue;
         }
+        
         if(salir){
             continue;
         }
         if(salidaPorQuantum == true){
+            continue;
+        }
+        if(entroSuspendidos == true){
+            entroSuspendidos = false;
             continue;
         }
         if(end == false && error_archivo == false){
@@ -956,7 +966,7 @@ int main(){
             cerrarArch_error(5);  
             continue;
         }
-        imprimirTMM(TMM);
+        //imprimirTMM(TMM);
     }
     endwin();    
     if (memoriaVirtual != NULL){

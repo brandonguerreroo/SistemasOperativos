@@ -40,13 +40,13 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
 PCB *buscarPorGID(PCB *lista, int num_GID);
 
-void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *terminados, int *numLineaLista);
+void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista);
 
 int calcularPaginasLibresSWAP(int TMS[]);
 
 int buscarMarcoPaginaLibreRAM(int TMM[]);
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion);
+int cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
 
 void imprimirTMM(int TMM[]);
 

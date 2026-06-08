@@ -47,7 +47,7 @@ int buscarMarcoPaginaLibreRAM(int TMM[]){
     return -1;
 }
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion){
+int cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
     int marco_de_la_pagina_en_swap;
     int marcoLibre_RAM;
     char linea[64];
@@ -62,13 +62,18 @@ void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int p
         TMM[marcoLibre_RAM] = proceso->PID;
         proceso->paginas[pagina_instruccion][0] = 1;
         proceso->paginas[pagina_instruccion][1] = marcoLibre_RAM;
+        return 0;
     }
     else{
+        //CAMBIAR checar por que el ultimo ejecucion no entra a suspendidos
+        PCB *procesoSuspendido = sacarFrente(ejecucion);
         //CAMBIAR   aqui va lo de meter en suspendido, tambien lo del reloj
+        insertar(suspendidos, procesoSuspendido);
         mvprintw(numLineaErrorLista,4,"ERROR, no hay memoria RAM");
         refresh();
         sleep(1);
         limpiarLinea(numLineaErrorLista);
+        return 1;
     }
     
     
