@@ -24,7 +24,7 @@ typedef struct PCB {
 
 void limpiarLinea(int num);
 
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar);
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, int numInstrucciones, PCB *nodoCopiar);
 
 void insertar(PCB *lista, PCB *nuevo);
 

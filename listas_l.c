@@ -5,7 +5,7 @@
 #include <curses.h>
 #include <unistd.h>
 
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar){
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, int numInstrucciones, PCB *nodoCopiar){
     PCB *nuevo = malloc(sizeof(PCB));
     nuevo->PID = pid;
     nuevo->GID = gid;
@@ -20,6 +20,7 @@ PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPagin
     nuevo->CPU = 0;
     nuevo->GCPU = 0;
     nuevo->P = 60;
+    nuevo->numInstrucciones = numInstrucciones;
     if(nodoCopiar == NULL){
         nuevo->paginas = malloc(numeroPaginas * sizeof(*nuevo->paginas));
         if (nuevo->paginas == NULL) {

@@ -78,7 +78,7 @@ void imprimirTMM(int TMM[]){
     for(int i = 0; i < marcosRAM; i++){
         mvprintw(5,4 + i,"%d", TMM[i]);  //CAMBIAR
         refresh();
-        //usleep(50000);
+        usleep(500000);
     }
 }
 
@@ -128,19 +128,13 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]){
     int marcoRAM;
     int marcoSWAP;
     int entradasTMP;
-    entradasTMP = calcularNumPaginas(proceso->numInstrucciones);
-    mvprintw(3,4,"%d", entradasTMP);  //CAMBIAR
-        refresh();
-        sleep(1);
-    
+    entradasTMP = calcularNumPaginas(proceso->numInstrucciones); 
     for(int i = 0 ; i < entradasTMP ; i++){
         proceso->paginas[i][0] = 0;
         marcoRAM = proceso->paginas[i][1];
         marcoSWAP = proceso->paginas[i][2];
         TMM[marcoRAM] = 0;
-        TMS[marcosSWAP] = 0;    
+        TMS[marcoSWAP] = 0;    
     }
-    imprimirTMM(TMM);
-    imprimirTMS(TMS);
 
 }

@@ -299,7 +299,6 @@ void meterEnTerminados(char linea[]){
     terminoProceso = true;
     guardarContexto(nodo, linea);
     terminoProceso = false;
-    
     liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
     insertar(&terminados, nodo);
     limpiar();
@@ -439,7 +438,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 PID++;
                 GID++; 
                 numeroDeGrupos++;
-                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
+                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
                 limpiarLinea(6);
                 cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
                 //imprimirTMS(TMS);
@@ -535,7 +534,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 if(i > numeroDeInstruccion){
                     PID++;
                     int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas,nodoCopiar->numInstrucciones, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -570,7 +569,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 if(i > numeroDeInstruccion){
                     PID++;
                     int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }
@@ -801,7 +800,7 @@ int main(){
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
             strncpy(copiaLinea, linea, sizeof(copiaLinea) - 1);
             copiaLinea[sizeof(copiaLinea)-1] = '\0';
-            imprimirTMM(TMM);
+            //imprimirTMM(TMM);
             mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
 
@@ -909,7 +908,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(90000);
+            usleep(500000);
             if(instJNZ == false){
                 PC++;
             }
