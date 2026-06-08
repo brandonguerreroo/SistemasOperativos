@@ -5,6 +5,11 @@
 #define tamañoDePagina 4
 #define marcosSWAP 32768
 #define marcosRAM 16
+#define numLineaErrorLista 5
+#define numLineaComando 4
+#define numFilaEjecucion 2
+#define tam_linea 64
+
 typedef struct PCB {
     int PID, GID;
     char nombre_proceso[50];
@@ -17,7 +22,9 @@ typedef struct PCB {
     struct PCB *sig;
 } PCB;
 
-PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, PCB *nodoCopiar);
+void limpiarLinea(int num);
+
+PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, int numInstrucciones, PCB *nodoCopiar);
 
 void insertar(PCB *lista, PCB *nuevo);
 
@@ -50,5 +57,7 @@ int buscarMarcoPaginaLibreSWAP(int TMS[]);
 void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso);
 
 void imprimirTMS(int TMS[]);
+
+void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
 
 #endif

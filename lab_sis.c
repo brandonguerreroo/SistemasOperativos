@@ -29,14 +29,14 @@ int GCPU_temp = 0;
 PCB listos;
 PCB ejecucion;
 PCB terminados;
-int numLineaErrorLista = 5;
-int numLineaComando = 4;
-int numFilaEjecucion = 2;
+PCB nuevos;
+PCB suspendidos;
+
 int numLineaLista = 8;
 char copiaNombre_archivo[50];
 int Q = 3;
 bool mataEjecucion = false;
-char copiaLinea[64];
+char copiaLinea[65];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
 
 char RAM[4096]; // 64 * 64
@@ -302,6 +302,7 @@ void meterEnTerminados(char linea[]){
     terminoProceso = true;
     guardarContexto(nodo, linea);
     terminoProceso = false;
+    liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
@@ -315,6 +316,7 @@ int matar(int num_PID){
         if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL)){
             numeroDeGrupos--;
         }
+        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
         insertar(&terminados, matar);
         return 0;
     }
@@ -322,6 +324,7 @@ int matar(int num_PID){
         terminoProceso = true;
         guardarContexto(matar, copiaLinea);
         terminoProceso = false;
+        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
         insertar(&terminados, matar);
         return 1;
     }
@@ -342,7 +345,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
     char comando_to[10];
     char archivo_to[50];
     char noinst[50];
-    int numFilaEjecucion = 2;
     int procesoPID_mata, procesoPID_fork;
     bool noinst_no_number = false;
     int numeroDeInstruccion;
@@ -421,7 +423,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             move(numFilaEjecucion,0);
             clrtoeol();
             refresh();
-            memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
             if (archivo == NULL) 
             {
@@ -442,17 +443,20 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 PID++;
                 GID++; 
                 numeroDeGrupos++;
-                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,NULL);
+                PCB *nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
+                limpiarLinea(6);
                 cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
                 //imprimirTMS(TMS);
                 insertar(&listos, nuevo);
                 fclose(archivo);
+                archivo = NULL;
             }else{
                 mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
                 refresh();
                 sleep(1);
                 limpiarLinea(numLineaErrorLista);
                 fclose(archivo);
+                archivo = NULL;
                 continue;
             }
             //}
@@ -535,7 +539,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 if(i > numeroDeInstruccion){
                     PID++;
                     int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas,nodoCopiar->numInstrucciones, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -570,7 +574,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 if(i > numeroDeInstruccion){
                     PID++;
                     int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar); 
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }
@@ -623,13 +627,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
     }
 }
 
-void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
+void restaurarContexto(PCB *nodo, char linea[], size_t size_linea)
 {
     EAX = nodo->EAX;
     EBX = nodo->EBX;
     ECX = nodo->ECX;
     EDX = nodo->EDX;
-    strncpy(linea,nodo->IR, tam_linea - 1);
+    strncpy(linea,nodo->IR, size_linea - 1);
     linea[tam_linea - 1] = '\0';
     PC = nodo->PC;
     CPU_temp = nodo->CPU;
@@ -638,7 +642,7 @@ void restaurarContexto(PCB *nodo, char linea[], size_t tam_linea)
 
 int main(){
 
-    char linea[64];
+    char linea[65];
     char *token;
     char inst_to[5];
     char reg_to[5];
@@ -659,6 +663,9 @@ int main(){
     ejecucion.sig = NULL;
     terminados.sig = NULL;
     int pagina_instruccion;
+    int desplazamiento;
+    int marcoRAM;
+    int direccionFisica;
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
     char basura = ' ';
 
@@ -672,8 +679,7 @@ int main(){
     for (int i = 0; i < bytesArchivo; i++){
         fwrite(&basura, sizeof(char), 1, memoriaVirtual);
     }
-    fclose(memoriaVirtual);
-    memoriaVirtual = NULL;
+    rewind(memoriaVirtual);
     
     initscr();
     while (salir == false){
@@ -719,11 +725,8 @@ int main(){
         //CAMBIAR
         /*pagina_instruccion = (nodo_a_ejecutar->PC)/4;
         if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-            memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
             cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
             imprimirTMM(TMM);
-            fclose(memoriaVirtual);
-            memoriaVirtual = NULL;
         }*/
         
         arc_instrucciones = fopen(nodo_a_ejecutar->nombre_proceso, "r");
@@ -752,31 +755,35 @@ int main(){
         entrar = false;
         mataEjecucion = false;
         instJNZ = false;
-        while (((fgets(linea, sizeof(linea), arc_instrucciones)) != NULL)  && (salir == false)){
-            if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
+        while (salir == false){
+            /*if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
                 if(i < PC){
                     i++;
                     continue;
                 }
                 entrar = true;
+            }*/
+            pagina_instruccion = PC/4;
+            desplazamiento = PC%4;
+
+            if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+                //imprimirTMM(TMM);
+                //CAMBIAR cuando se llena la RAM ya no se puede salir
+                continue;
             }
-            if(strchr(linea, '\n') == NULL){ //busca \n en linea si no lo encuentra la linea es mas larga de lo que se permite
-                int c;
-                if((c = fgetc(arc_instrucciones)) != EOF){ //por si es el caso de la linea END ya que no tiene \n al final
-                    meterEnTerminados(copiaLinea);
-                    cerrarArch_error(10);
-                    error_archivo = true;
-                    break;
-                }
+            else{
+                marcoRAM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
+                direccionFisica = (marcoRAM * 4 * tam_linea) + (desplazamiento * tam_linea);
+                strncpy(linea, RAM + direccionFisica, 64);
+                linea[64] = '\0';
             }
 
-            pagina_instruccion = PC/4;
-            if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-                memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
-                imprimirTMM(TMM);
-                fclose(memoriaVirtual);
-                memoriaVirtual = NULL;
+            if(strchr(linea, '\n') == NULL){ //busca \n en linea si no lo encuentra la linea es mas larga de lo que se permite
+                meterEnTerminados(copiaLinea);
+                cerrarArch_error(10);
+                error_archivo = true;
+                break;
             }
 
             coma = false;
@@ -798,7 +805,7 @@ int main(){
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
             strncpy(copiaLinea, linea, sizeof(copiaLinea) - 1);
             copiaLinea[sizeof(copiaLinea)-1] = '\0';
-            imprimirTMM(TMM);
+            //imprimirTMM(TMM);
             mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
 
@@ -906,7 +913,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(5000);
+            usleep(500000);
             if(instJNZ == false){
                 PC++;
             }
@@ -955,9 +962,11 @@ int main(){
             cerrarArch_error(5);  
             continue;
         }
+        imprimirTMM(TMM);
     }
     endwin();
-    //fclose(memoriaVirtual);
+    fclose(memoriaVirtual);
+    memoriaVirtual = NULL;
     //imprimirTMM(TMM);
     return 0;
 }
