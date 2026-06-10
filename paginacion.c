@@ -72,7 +72,7 @@ void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int p
 }
 
 void guardarTiempos(PCB *procesoSuspendido){
-    int numero_aleatorio = (rand() % 9) + 2;
+    int numero_aleatorio = (rand() % 1) + 2;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }
@@ -175,7 +175,7 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
     return 1;
 }
 
-void sacarSuspendidos(PCB *suspendidos, PCB *listos){
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos){
     
     time_t diferencia;
     time_t tiempo_actual;
@@ -189,11 +189,12 @@ void sacarSuspendidos(PCB *suspendidos, PCB *listos){
         if(diferencia >= (time_t)temp2->espera){
             temp1->sig = temp2->sig;
             temp2->sig = NULL;
-            insertar(listos, temp2);
+            return temp2;
         }
         else{
             temp1= temp1->sig;
             temp2= temp2->sig;
         }
     }
+    return NULL;
 }

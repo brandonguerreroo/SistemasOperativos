@@ -606,7 +606,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         
         if(num_ciclo == 1){  
-            if(listos.sig != NULL || suspendidos.sig != NULL){            
+            if((listos.sig != NULL) || (suspendidos.sig != NULL)){             
                 break;
             }
             else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){
@@ -699,7 +699,8 @@ int main(){
         refresh();
         sleep(1);
         if(ejecuta == false){
-            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); 
+            
+            ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
             if(salir == true){
                 continue;
             }
@@ -711,11 +712,18 @@ int main(){
 
         limpiar();
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
-                
+        
         if(ejecucion.sig == NULL){
-            if(suspendidos.sig != NULL){
-                //verERROR();
-                sacarSuspendidos(&suspendidos, &listos);
+            while((listos.sig == NULL)){
+                while(suspendidos.sig != NULL){
+                    PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
+                    if(nodo != NULL){
+                        insertar(&listos, nodo);
+                    }
+                    else{
+                        break;
+                    }
+                }
             }
             
             //Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
@@ -723,14 +731,12 @@ int main(){
             //PCB *meterEjecucion = sacarFrente(&listos);
             // Si no hay nada en listos, no meter nada en ejecucion
             if(meterEjecucion == NULL){
-                verERROR();
                 continue;
             }
             
             insertar(&ejecucion, meterEjecucion); 
 
         }
-
         
         PCB *nodo_a_ejecutar = ejecucion.sig;
         copiaLinea[0] = '\0';

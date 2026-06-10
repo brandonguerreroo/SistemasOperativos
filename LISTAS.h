@@ -2,6 +2,8 @@
 #define LISTAS_H //sirve evita errores si el archivo se incluye varias veces
 
 #include <stdbool.h> //debe ir aqui por el uso del bool
+#include <time.h>
+
 #define tamañoDePagina 4
 #define marcosSWAP 32768
 #define marcosRAM 16
@@ -70,6 +72,6 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
 
-void sacarSuspendidos(PCB *suspendidos, PCB *listos);
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos);
 
 #endif
