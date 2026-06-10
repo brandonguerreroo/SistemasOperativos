@@ -6,6 +6,7 @@
 #include <curses.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <time.h>
 
 int calcularPaginasLibresSWAP(int TMS[]){
     int paginasLibresSWAP = 0;
@@ -47,7 +48,7 @@ int buscarMarcoPaginaLibreRAM(int TMM[]){
     return -1;
 }
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion){
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
     int marco_de_la_pagina_en_swap;
     int marcoLibre_RAM;
     char linea[64];
@@ -63,15 +64,17 @@ void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int p
         proceso->paginas[pagina_instruccion][0] = 1;
         proceso->paginas[pagina_instruccion][1] = marcoLibre_RAM;
     }
-    else{
-        //CAMBIAR   aqui va lo de meter en suspendido, tambien lo del reloj
-        mvprintw(numLineaErrorLista,4,"ERROR, no hay memoria RAM");
-        refresh();
-        sleep(1);
-        limpiarLinea(numLineaErrorLista);
-    }
+    /*mvprintw(numLineaErrorLista,4,"ERROR, no hay memoria RAM");
+    refresh();
+    sleep(1);
+    limpiarLinea(numLineaErrorLista);*/
     
-    
+}
+
+void guardarTiempos(PCB *procesoSuspendido){
+    int numero_aleatorio = (rand() % 9) + 2;
+    time(&procesoSuspendido->tiempo_de_salida);
+    procesoSuspendido->espera = numero_aleatorio;
 }
 
 void imprimirTMM(int TMM[]){
@@ -156,8 +159,10 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
             FILE *archivo = fopen(nuevo->nombre_proceso, "rb");
             cargar_a_memoria_virtual(archivo, memoriaVirtual,numeroPaginas,TMS,nuevo);
             insertar(listos, nuevo);
-            fclose(archivo);
-            archivo = NULL;
+            if (archivo != NULL){
+                fclose(archivo);
+                archivo = NULL;
+            }
         }
         else{
             memoriaSuficiente = false;
@@ -168,4 +173,27 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
         }
     }
     return 1;
+}
+
+void sacarSuspendidos(PCB *suspendidos, PCB *listos){
+    
+    time_t diferencia;
+    time_t tiempo_actual;
+
+    PCB *temp1 = suspendidos;
+    PCB *temp2 = suspendidos->sig;
+
+    while(temp1->sig != NULL){
+        time(&tiempo_actual); 
+        diferencia = tiempo_actual - temp2->tiempo_de_salida;
+        if(diferencia >= (time_t)temp2->espera){
+            temp1->sig = temp2->sig;
+            temp2->sig = NULL;
+            insertar(listos, temp2);
+        }
+        else{
+            temp1= temp1->sig;
+            temp2= temp2->sig;
+        }
+    }
 }

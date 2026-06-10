@@ -10,6 +10,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include "LISTAS.h"
+#include <time.h>
 
 FILE *arc_instrucciones;
 FILE *memoriaVirtual;
@@ -307,9 +308,7 @@ void meterEnTerminados(char linea[]){
     insertar(&terminados, nodo);
     limpiar();
     //Imprimir cada que cambie la lista de terminados
-    imprimir(&ejecucion, 2, &numLineaLista);
-    imprimir(&listos, 1, &numLineaLista);
-    imprimir(&terminados, 3, &numLineaLista);
+    imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
 }
 int matar(int num_PID){
     PCB *matar;
@@ -409,9 +408,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             limpiar();
             //Imprimir cada que se mate un proceso
-            imprimir(&ejecucion, 2, &numLineaLista);  
-            imprimir(&listos, 1, &numLineaLista);
-            imprimir(&terminados, 3, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         }
         else if( (strcmp(comando_to,"salir") == 0) && (archivo_to[0] == '\0') && (noinst[0] == '\0') ){
             *ejecuta = false;
@@ -439,8 +436,11 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             //for(int i = 0; i < 1; i++){
             numeroDeInstrucciones = calcularInstrucciones(archivo);
             numeroPaginas = calcularNumPaginas(numeroDeInstrucciones);
-            fclose(archivo);
-            archivo = NULL;
+            
+            if (archivo != NULL){
+                fclose(archivo);
+                archivo = NULL;
+            }
 
             PCB *nuevo;
             if(numeroPaginas <= marcosSWAP){
@@ -449,6 +449,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 numeroDeGrupos++;
                 nuevo = crear_nodo(PID, GID, nombre_archivo,0,numeroPaginas,numeroDeInstrucciones, NULL);
                 insertar(&nuevos, nuevo);
+                limpiar();
+                imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a nuevos
             }
             else{
                 mvprintw(numLineaErrorLista,4, "ERROR. Archivo no cabe en el SWAP");
@@ -460,14 +462,11 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             if(cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS) == 1){
                 continue;
             }
-
             //}
             *ejecuta = true;
             limpiar();
             //Imprimir cada que cambie se agregue uno nuevo
-            imprimir(&ejecucion, 2, &numLineaLista); 
-            imprimir(&listos, 1, &numLineaLista);
-            imprimir(&terminados, 3, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
             break;
         }
         else if((strcmp(comando_to, "fork") == 0) && (archivo_to[0] != '\0') && (noinst[0] != '\0')){
@@ -595,9 +594,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             limpiar();
             //Imprimir cada que se copie un proceso
-            imprimir(&ejecucion, 2, &numLineaLista); 
-            imprimir(&listos, 1, &numLineaLista);
-            imprimir(&terminados, 3, &numLineaLista);
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
             break;
         }
         else if (comando_to[0] != '\0' || (comando_to[0] == '\0' && archivo_to[0] != '\0')){
@@ -609,7 +606,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         
         if(num_ciclo == 1){  
-            if(listos.sig != NULL){            
+            if(listos.sig != NULL || suspendidos.sig != NULL){            
                 break;
             }
             else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){
@@ -617,7 +614,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
         }
         if(num_ciclo == 2){
-            if(listos.sig != NULL && end == true){ 
+            if((listos.sig != NULL && end == true) || (suspendidos.sig != NULL  && end == true)){ 
                 *ejecuta = true;
                 break;
             }
@@ -643,7 +640,6 @@ void restaurarContexto(PCB *nodo, char linea[], size_t size_linea)
 }
 
 int main(){
-
     char linea[65];
     char *token;
     char inst_to[5];
@@ -661,6 +657,7 @@ int main(){
     bool entrar = false;
     bool salidaPorQuantum = false;
     bool instJNZ = false;
+    bool entroSuspendidos = false;
     listos.sig = NULL;
     ejecucion.sig = NULL;
     terminados.sig = NULL;
@@ -672,6 +669,7 @@ int main(){
     int direccionFisica;
     int bytesArchivo = 8388608; //2^17 instrucciones * 2^6 tamaño de IR.
     char basura = ' ';
+    srand(time(NULL));
 
     memoriaVirtual = fopen(nombreArchivoSWAP,"r+b");
  
@@ -699,7 +697,7 @@ int main(){
         
         mvprintw(0,4," ");
         refresh();
-        //sleep(2);
+        sleep(1);
         if(ejecuta == false){
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1); 
             if(salir == true){
@@ -710,16 +708,29 @@ int main(){
         end = false;        //debe volver a falso
         cortar = false;
 
+
+        limpiar();
+        imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
+                
         if(ejecucion.sig == NULL){
+            if(suspendidos.sig != NULL){
+                //verERROR();
+                sacarSuspendidos(&suspendidos, &listos);
+            }
+            
             //Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
             PCB *meterEjecucion = buscar_por_prioridad(&listos);
             //PCB *meterEjecucion = sacarFrente(&listos);
             // Si no hay nada en listos, no meter nada en ejecucion
             if(meterEjecucion == NULL){
+                verERROR();
                 continue;
             }
+            
             insertar(&ejecucion, meterEjecucion); 
+
         }
+
         
         PCB *nodo_a_ejecutar = ejecucion.sig;
         copiaLinea[0] = '\0';
@@ -745,9 +756,8 @@ int main(){
 
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
-        imprimir(&ejecucion, 2, &numLineaLista);
-        imprimir(&listos, 1, &numLineaLista);
-        imprimir(&terminados, 3, &numLineaLista);
+        imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
+        sleep(1);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
         mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
@@ -771,10 +781,19 @@ int main(){
             desplazamiento = PC%4;
 
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
+
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &ejecucion, &suspendidos);
+                PCB *procesoSuspendido = sacarFrente(&ejecucion);
+                guardarContexto(procesoSuspendido, copiaLinea);
+                insertar(&suspendidos, procesoSuspendido);
+                guardarTiempos(procesoSuspendido);
+                //CAMBIAR   aqui va lo  del reloj
+                entroSuspendidos = true;
+                limpiar();
+                imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
                 //imprimirTMM(TMM);
                 //CAMBIAR cuando se llena la RAM ya no se puede salir
-                continue;
+                break;
             }
             else{
                 marcoRAM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
@@ -932,9 +951,7 @@ int main(){
                 insertar(&listos, nodoEnEjecucion);
                 limpiar();
                 //Imprimir cada que cambie listos
-                imprimir(&ejecucion, 2, &numLineaLista);
-                imprimir(&listos, 1, &numLineaLista);
-                imprimir(&terminados, 3, &numLineaLista);
+                imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
                 break;
             }
             
@@ -955,10 +972,15 @@ int main(){
             salir = false;
             continue;
         }
+        
         if(salir){
             continue;
         }
         if(salidaPorQuantum == true){
+            continue;
+        }
+        if(entroSuspendidos == true){
+            entroSuspendidos = false;
             continue;
         }
         if(end == false && error_archivo == false){
@@ -966,11 +988,13 @@ int main(){
             cerrarArch_error(5);  
             continue;
         }
-        imprimirTMM(TMM);
+        //imprimirTMM(TMM);
     }
-    endwin();
-    fclose(memoriaVirtual);
-    memoriaVirtual = NULL;
+    endwin();    
+    if (memoriaVirtual != NULL){
+        fclose(memoriaVirtual);
+        memoriaVirtual = NULL;
+    }
     //imprimirTMM(TMM);
     return 0;
 }

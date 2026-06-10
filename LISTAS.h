@@ -18,6 +18,8 @@ typedef struct PCB {
     int EAX,EBX,ECX,EDX;
     int CPU, GCPU, P; // P es Prioridad.
     int numInstrucciones;
+    time_t tiempo_de_salida;
+    int espera;
     int (*paginas)[3];
     struct PCB *sig;
 } PCB;
@@ -40,11 +42,17 @@ PCB *buscar_sacar(PCB *lista, int num_PID, bool condicion);
 
 PCB *buscarPorGID(PCB *lista, int num_GID);
 
+void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista);
+
+void verERROR();
+
 int calcularPaginasLibresSWAP(int TMS[]);
 
 int buscarMarcoPaginaLibreRAM(int TMM[]);
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion);
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
+
+void guardarTiempos(PCB *procesoSuspendido);
 
 void imprimirTMM(int TMM[]);
 
@@ -61,5 +69,7 @@ void imprimirTMS(int TMS[]);
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
+
+void sacarSuspendidos(PCB *suspendidos, PCB *listos);
 
 #endif
