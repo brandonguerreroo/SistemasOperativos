@@ -72,7 +72,8 @@ void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int p
 }
 
 void guardarTiempos(PCB *procesoSuspendido){
-    int numero_aleatorio = (rand() % 1) + 2;
+    int numero_aleatorio = (rand() % 9) + 2;
+    numero_aleatorio = 10;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }

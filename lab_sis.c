@@ -697,7 +697,7 @@ int main(){
         
         mvprintw(0,4," ");
         refresh();
-        sleep(1);
+        //sleep(1);
         if(ejecuta == false){
             
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
@@ -714,18 +714,18 @@ int main(){
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
         
         if(ejecucion.sig == NULL){
-            while((listos.sig == NULL)){
-                while(suspendidos.sig != NULL){
-                    PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
-                    if(nodo != NULL){
-                        insertar(&listos, nodo);
-                    }
-                    else{
-                        break;
-                    }
+            while(suspendidos.sig != NULL){
+                PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
+                if(nodo != NULL){
+                    insertar(&listos, nodo);
+                }
+                else{
+                    break;
                 }
             }
-            
+            limpiar();
+            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
+        
             //Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
             PCB *meterEjecucion = buscar_por_prioridad(&listos);
             //PCB *meterEjecucion = sacarFrente(&listos);
@@ -763,7 +763,6 @@ int main(){
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
-        sleep(1);
 
         mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
         mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
@@ -942,7 +941,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            usleep(50000);
             if(instJNZ == false){
                 PC++;
             }

@@ -54,6 +54,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,24, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
@@ -111,6 +112,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,24, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Suspendidos");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
