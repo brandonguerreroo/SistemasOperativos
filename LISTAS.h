@@ -2,6 +2,8 @@
 #define LISTAS_H //sirve evita errores si el archivo se incluye varias veces
 
 #include <stdbool.h> //debe ir aqui por el uso del bool
+#include <time.h>
+
 #define tamañoDePagina 4
 #define marcosSWAP 32768
 #define marcosRAM 16
@@ -18,6 +20,8 @@ typedef struct PCB {
     int EAX,EBX,ECX,EDX;
     int CPU, GCPU, P; // P es Prioridad.
     int numInstrucciones;
+    time_t tiempo_de_salida;
+    int espera;
     int (*paginas)[3];
     struct PCB *sig;
 } PCB;
@@ -29,6 +33,10 @@ PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPagin
 void insertar(PCB *lista, PCB *nuevo);
 
 void imprimir(PCB *lista, int numLista, int *numLinea);
+
+void mostrarEncabezados();
+
+void mostrarPantalla(int TMS[], int TMM[]);
 
 PCB *sacarFrente(PCB *lista);
 
@@ -42,11 +50,15 @@ PCB *buscarPorGID(PCB *lista, int num_GID);
 
 void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista);
 
+void verERROR();
+
 int calcularPaginasLibresSWAP(int TMS[]);
 
 int buscarMarcoPaginaLibreRAM(int TMM[]);
 
-int cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
+
+void guardarTiempos(PCB *procesoSuspendido);
 
 void imprimirTMM(int TMM[]);
 
@@ -63,5 +75,7 @@ void imprimirTMS(int TMS[]);
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
+
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos);
 
 #endif

@@ -6,6 +6,7 @@
 #include <curses.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include <time.h>
 
 int calcularPaginasLibresSWAP(int TMS[]){
     int paginasLibresSWAP = 0;
@@ -47,7 +48,7 @@ int buscarMarcoPaginaLibreRAM(int TMM[]){
     return -1;
 }
 
-int cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
     int marco_de_la_pagina_en_swap;
     int marcoLibre_RAM;
     char linea[64];
@@ -62,21 +63,19 @@ int cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pa
         TMM[marcoLibre_RAM] = proceso->PID;
         proceso->paginas[pagina_instruccion][0] = 1;
         proceso->paginas[pagina_instruccion][1] = marcoLibre_RAM;
-        return 0;
     }
-    else{
-        //CAMBIAR checar por que el ultimo ejecucion no entra a suspendidos
-        PCB *procesoSuspendido = sacarFrente(ejecucion);
-        //CAMBIAR   aqui va lo de meter en suspendido, tambien lo del reloj
-        insertar(suspendidos, procesoSuspendido);
-        mvprintw(numLineaErrorLista,4,"ERROR, no hay memoria RAM");
-        refresh();
-        sleep(1);
-        limpiarLinea(numLineaErrorLista);
-        return 1;
-    }
+    /*mvprintw(numLineaErrorLista,4,"ERROR, no hay memoria RAM");
+    refresh();
+    sleep(1);
+    limpiarLinea(numLineaErrorLista);*/
     
-    
+}
+
+void guardarTiempos(PCB *procesoSuspendido){
+    int numero_aleatorio = (rand() % 9) + 2;
+    numero_aleatorio = 2;
+    time(&procesoSuspendido->tiempo_de_salida);
+    procesoSuspendido->espera = numero_aleatorio;
 }
 
 void imprimirTMM(int TMM[]){
@@ -175,4 +174,28 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
         }
     }
     return 1;
+}
+
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos){
+    
+    time_t diferencia;
+    time_t tiempo_actual;
+
+    PCB *temp1 = suspendidos;
+    PCB *temp2 = suspendidos->sig;
+
+    while(temp1->sig != NULL){
+        time(&tiempo_actual); 
+        diferencia = tiempo_actual - temp2->tiempo_de_salida;
+        if(diferencia >= (time_t)temp2->espera){
+            temp1->sig = temp2->sig;
+            temp2->sig = NULL;
+            return temp2;
+        }
+        else{
+            temp1= temp1->sig;
+            temp2= temp2->sig;
+        }
+    }
+    return NULL;
 }

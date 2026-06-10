@@ -54,16 +54,17 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,24, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,80, "%d", temp->EAX);
-            mvprintw(*numLinea,96, "%d", temp->EBX);
-            mvprintw(*numLinea,112, "%d", temp->ECX);
-            mvprintw(*numLinea,128, "%d", temp->EDX);
-            mvprintw(*numLinea,136, "%d", temp->P);
-            mvprintw(*numLinea,142, "%d", temp->CPU);
-            mvprintw(*numLinea,148, "%d", temp->GCPU);
+            mvprintw(*numLinea,76, "%d", temp->EAX);
+            mvprintw(*numLinea,84, "%d", temp->EBX);
+            mvprintw(*numLinea,92, "%d", temp->ECX);
+            mvprintw(*numLinea,100, "%d", temp->EDX);
+            mvprintw(*numLinea,108, "%d", temp->P);
+            mvprintw(*numLinea,116, "%d", temp->CPU);
+            mvprintw(*numLinea,124, "%d", temp->GCPU);
             refresh();
         }
         if(numLista == 2){
@@ -71,7 +72,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
             mvprintw(*numLinea,32, "%s","Ejecucion");
-            mvprintw(*numLinea,48, "--------------------------------------------------------------------------------------------------------");
+            mvprintw(*numLinea,48, "--------------------------------------------------------------------------------");
             refresh();
         }
         
@@ -82,13 +83,13 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,80, "%d", temp->EAX);
-            mvprintw(*numLinea,96, "%d", temp->EBX);
-            mvprintw(*numLinea,112, "%d", temp->ECX);
-            mvprintw(*numLinea,128, "%d", temp->EDX);
-            mvprintw(*numLinea,136, "%d", temp->P);
-            mvprintw(*numLinea,142, "%d", temp->CPU);
-            mvprintw(*numLinea,148, "%d", temp->GCPU);
+           mvprintw(*numLinea,76, "%d", temp->EAX);
+            mvprintw(*numLinea,84, "%d", temp->EBX);
+            mvprintw(*numLinea,92, "%d", temp->ECX);
+            mvprintw(*numLinea,100, "%d", temp->EDX);
+            mvprintw(*numLinea,108, "%d", temp->P);
+            mvprintw(*numLinea,116, "%d", temp->CPU);
+            mvprintw(*numLinea,124, "%d", temp->GCPU);
             refresh();
         }
         if(numLista == 4){
@@ -98,33 +99,57 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Nuevos");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,80, "%d", temp->EAX);
-            mvprintw(*numLinea,96, "%d", temp->EBX);
-            mvprintw(*numLinea,112, "%d", temp->ECX);
-            mvprintw(*numLinea,128, "%d", temp->EDX);
-            mvprintw(*numLinea,136, "%d", temp->P);
-            mvprintw(*numLinea,142, "%d", temp->CPU);
-            mvprintw(*numLinea,148, "%d", temp->GCPU);
+            mvprintw(*numLinea,76, "%d", temp->EAX);
+            mvprintw(*numLinea,84, "%d", temp->EBX);
+            mvprintw(*numLinea,92, "%d", temp->ECX);
+            mvprintw(*numLinea,100, "%d", temp->EDX);
+            mvprintw(*numLinea,108, "%d", temp->P);
+            mvprintw(*numLinea,116, "%d", temp->CPU);
+            mvprintw(*numLinea,124, "%d", temp->GCPU);
             refresh();
         }
         if(numLista == 5){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
+            mvprintw(*numLinea,24, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Suspendidos");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-            mvprintw(*numLinea,80, "%d", temp->EAX);
-            mvprintw(*numLinea,96, "%d", temp->EBX);
-            mvprintw(*numLinea,112, "%d", temp->ECX);
-            mvprintw(*numLinea,128, "%d", temp->EDX);
-            mvprintw(*numLinea,136, "%d", temp->P);
-            mvprintw(*numLinea,142, "%d", temp->CPU);
-            mvprintw(*numLinea,148, "%d", temp->GCPU);
+            mvprintw(*numLinea,76, "%d", temp->EAX);
+            mvprintw(*numLinea,84, "%d", temp->EBX);
+            mvprintw(*numLinea,92, "%d", temp->ECX);
+            mvprintw(*numLinea,100, "%d", temp->EDX);
+            mvprintw(*numLinea,108, "%d", temp->P);
+            mvprintw(*numLinea,116, "%d", temp->CPU);
+            mvprintw(*numLinea,124, "%d", temp->GCPU);
             refresh();
         }
         (*numLinea)++;
     } 
+}
+
+void mostrarEncabezados(){
+        mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
+        mvprintw(7,4, "PID");
+        mvprintw(7,10, "GID");
+        mvprintw(7,16, "Nombre");
+        mvprintw(7,32, "Estado");
+        mvprintw(7,56, "IR");
+        mvprintw(7,48, "PC");
+        mvprintw(7,76, "EAX");
+        mvprintw(7,84, "EBX");
+        mvprintw(7,92, "ECX");
+        mvprintw(7,100, "EDX");
+        mvprintw(7,108, "P");
+        mvprintw(7,116, "CPU");
+        mvprintw(7,124, "GCPU");
+        refresh();
+}
+void mostrarPantalla(int TMS[], int TMM[]){
+        mostrarEncabezados();
+        mvprintw(1,140,"TMM");
+        for(int i = 0; i < )
 }
 
 PCB *sacarFrente(PCB *lista){  
@@ -235,4 +260,11 @@ void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, 
     imprimir(nuevos, 4, numLineaLista);
     imprimir(suspendidos, 5, numLineaLista);
     imprimir(terminados, 3, numLineaLista);
+}
+
+void verERROR(){
+    mvprintw(numLineaErrorLista,4,"AQUI");
+    refresh();
+    sleep(1);
+    limpiarLinea(numLineaErrorLista);
 }
