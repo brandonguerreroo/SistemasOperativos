@@ -769,6 +769,7 @@ int main(){
                     continue;
                 }
                 entroSuspendidos = true;
+                limpiar();
                 imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
                 //imprimirTMM(TMM);
                 //CAMBIAR cuando se llena la RAM ya no se puede salir
