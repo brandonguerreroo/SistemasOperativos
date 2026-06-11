@@ -36,7 +36,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea);
 
 void mostrarEncabezados();
 
-void mostrarPantalla(int TMS[], int TMM[]);
+void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar);
 
 PCB *sacarFrente(PCB *lista);
 
@@ -54,13 +54,13 @@ void verERROR();
 
 int calcularPaginasLibresSWAP(int TMS[]);
 
-int buscarMarcoPaginaLibreRAM(int TMM[]);
+int buscarMarcoPaginaLibreRAM(int TMM[][2]);
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
 
 void guardarTiempos(PCB *procesoSuspendido);
 
-void imprimirTMM(int TMM[]);
+void imprimirTMM(int TMM[][2]);
 
 int calcularInstrucciones(FILE *archivo);
 
@@ -72,7 +72,9 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void imprimirTMS(int TMS[]);
 
-void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]);
+void imprimirTMP(PCB *nodo_a_ejecutar);
+
+void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
 

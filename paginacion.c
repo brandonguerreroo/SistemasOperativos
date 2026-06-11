@@ -39,16 +39,16 @@ int buscarMarcoPaginaLibreSWAP(int TMS[]){
     return -1; //Nunca llega aqui
 }
 
-int buscarMarcoPaginaLibreRAM(int TMM[]){
+int buscarMarcoPaginaLibreRAM(int TMM[][2]){
     for(int i = 0; i < marcosRAM; i++){
-        if(TMM[i] == 0){
+        if(TMM[i][0] == 0){
             return i;
         }
     }
     return -1;
 }
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
     int marco_de_la_pagina_en_swap;
     int marcoLibre_RAM;
     char linea[64];
@@ -60,7 +60,7 @@ void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[], PCB *proceso, int p
             fread(linea, sizeof(char), 64, SWAP);
             memcpy(RAM + (marcoLibre_RAM * 4 * tam_linea) + (i * tam_linea), linea, 64);
         }
-        TMM[marcoLibre_RAM] = proceso->PID;
+        TMM[marcoLibre_RAM][0] = proceso->PID;
         proceso->paginas[pagina_instruccion][0] = 1;
         proceso->paginas[pagina_instruccion][1] = marcoLibre_RAM;
     }
@@ -78,14 +78,15 @@ void guardarTiempos(PCB *procesoSuspendido){
     procesoSuspendido->espera = numero_aleatorio;
 }
 
-void imprimirTMM(int TMM[]){
-    for(int i = 0; i < marcosRAM; i++){
-        mvprintw(5,4 + i,"%d", TMM[i]);  //CAMBIAR
-        refresh();
-        usleep(500000);
-    }
+void imprimirTMM(int TMM[][2]){
+        for(int i = 0; i < marcosRAM; i++){
+            mvprintw(3+i,140,"%d",i);
+            mvprintw(3+i,150,"%d", TMM[i][0]);
+            mvprintw(3+i,160,"%d", TMM[i][1]);
+            refresh();
+            //usleep(500000);
+        }
 }
-
 
 void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso){
     char linea[64];
@@ -121,14 +122,27 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
     }
 }
 void imprimirTMS(int TMS[]){
-    for(int i = 0; i < marcosSWAP; i++){
-        mvprintw(6,4 + i,"%d", TMS[i]);  //CAMBIAR
+    for(int i = 0; i < 16; i++){
+        mvprintw(3+i,175, "%d", i);
+        mvprintw(3+i,185, "%d", TMS[i]);
         refresh();
-        sleep(1);
     }
 }
 
-void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]){
+void imprimirTMP(PCB *nodo_a_ejecutar){
+    int paginas = calcularNumPaginas(nodo_a_ejecutar->numInstrucciones);
+    if(paginas > 16){
+        paginas = 16;
+    }
+    for(int i = 0; i < paginas; i++){
+        mvprintw(24+i,145, "%d", i);
+        mvprintw(24+i,155, "%d", nodo_a_ejecutar->paginas[i][0]);
+        mvprintw(24+i,165, "%d", nodo_a_ejecutar->paginas[i][1]);
+        mvprintw(24+i,175, "%d", nodo_a_ejecutar->paginas[i][2]);
+    }
+}   
+
+void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
     int marcoRAM;
     int marcoSWAP;
     int entradasTMP;
@@ -137,7 +151,7 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[], int TMS[]){
         proceso->paginas[i][0] = 0;
         marcoRAM = proceso->paginas[i][1];
         marcoSWAP = proceso->paginas[i][2];
-        TMM[marcoRAM] = 0;
+        TMM[marcoRAM][0] = 0;
         TMS[marcoSWAP] = 0;    
     }
 

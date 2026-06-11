@@ -146,10 +146,26 @@ void mostrarEncabezados(){
         mvprintw(7,124, "GCPU");
         refresh();
 }
-void mostrarPantalla(int TMS[], int TMM[]){
+void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar){
         mostrarEncabezados();
-        mvprintw(1,140,"TMM");
-        for(int i = 0; i < )
+        mvprintw(1,151,"TMM");
+        mvprintw(2,140,"Marco");
+        mvprintw(2,150,"Dueño");
+        mvprintw(2,160,"Reloj");
+        refresh();
+        imprimirTMM(TMM);
+        mvprintw(1,181,"TMS");
+        mvprintw(2,175,"Marco");
+        mvprintw(2,185,"Dueño");
+        imprimirTMS(TMS);
+        refresh();
+        mvprintw(22,160,"TMP");
+        mvprintw(23,145,"Pagina");
+        mvprintw(23,155,"Bit");
+        mvprintw(23,165,"MarcoRAM");
+        mvprintw(23,175,"MarcoSWAP");
+        imprimirTMP(nodo_a_ejecutar);
+        refresh();
 }
 
 PCB *sacarFrente(PCB *lista){  

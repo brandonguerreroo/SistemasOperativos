@@ -48,8 +48,7 @@ char nombreArchivoSWAP[] = "memoriavirtual.bin";
 int kbhit(void);
 void limpiarLinea(int num)
 {
-    move(num,4);
-    clrtoeol();
+    mvprintw(num, 4, "                                                                                                                                  ");
     refresh();
 }
 int cerrarArch_error(int num){
@@ -266,8 +265,7 @@ int JNZ(char reg_to[], bool *instJNZ, int *i){
 
 void limpiar(){  //Limpia la pantalla desde la linea 8 hasta el ultimo renglon que se imprimio
     for(int l = 8; l <= numLineaLista; l++){
-        move(l,0);
-        clrtoeol();
+        mvprintw(l, 4, "                                                                                                                                  ");
     }
     refresh();
     numLineaLista = 8;   
@@ -759,23 +757,12 @@ int main(){
             cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
             imprimirTMM(TMM);
         }*/
-        
-        arc_instrucciones = fopen(nodo_a_ejecutar->nombre_proceso, "r");
-        if (arc_instrucciones == NULL){
-            mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
-            meterEnTerminados(copiaLinea);
-            refresh();
-            sleep(1);
-            limpiarLinea(numLineaErrorLista);
-            continue;
-        }
-
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
 
         //mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
-        mostrarPantalla(TMS, TMM);
+        mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
         refresh();
         int qua = 0;
         //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
@@ -804,8 +791,6 @@ int main(){
                 guardarTiempos(procesoSuspendido);
                 //CAMBIAR   aqui va lo  del reloj
                 entroSuspendidos = true;
-                limpiar();
-                imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
                 //imprimirTMM(TMM);
                 //CAMBIAR cuando se llena la RAM ya no se puede salir
                 break;
@@ -833,9 +818,7 @@ int main(){
             inst_to[0] = '\0';
             reg_to[0] = '\0';
             rv_to[0] = '\0';
-            
-            move(numFilaEjecucion,0);
-            clrtoeol();
+            limpiarLinea(numFilaEjecucion);
             refresh();
             mvprintw(numFilaEjecucion,4,"%d",PC);
             refresh();
