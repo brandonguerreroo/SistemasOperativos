@@ -20,14 +20,17 @@ typedef struct PCB {
     int EAX,EBX,ECX,EDX;
     int CPU, GCPU, P; // P es Prioridad.
     int numInstrucciones;
+    int numPaginas;
     time_t tiempo_de_salida;
     int espera;
     int (*paginas)[3];
     struct PCB *sig;
 } PCB;
 
+//lab_sis.c
 void limpiarLinea(int num);
 
+//listas_l.c
 PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPaginas, int numInstrucciones, PCB *nodoCopiar);
 
 void insertar(PCB *lista, PCB *nuevo);
@@ -35,6 +38,8 @@ void insertar(PCB *lista, PCB *nuevo);
 void imprimir(PCB *lista, int numLista, int *numLinea);
 
 void mostrarEncabezados();
+
+void limpiarTablas();
 
 void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar);
 
@@ -52,15 +57,8 @@ void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, 
 
 void verERROR();
 
+//paginacion.c
 int calcularPaginasLibresSWAP(int TMS[]);
-
-int buscarMarcoPaginaLibreRAM(int TMM[][2]);
-
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
-
-void guardarTiempos(PCB *procesoSuspendido);
-
-void imprimirTMM(int TMM[][2]);
 
 int calcularInstrucciones(FILE *archivo);
 
@@ -68,11 +66,21 @@ int calcularNumPaginas(int numeroInstrucciones);
 
 int buscarMarcoPaginaLibreSWAP(int TMS[]);
 
+int buscarMarcoPaginaLibreRAM(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos);
+
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *listos, PCB *ejecucion, PCB *suspendidos);
+
 void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso);
+
+void guardarTiempos(PCB *procesoSuspendido);
+
+void imprimirTMM(int TMM[][2]);
 
 void imprimirTMS(int TMS[]);
 
 void imprimirTMP(PCB *nodo_a_ejecutar);
+
+void calcularPorcentajes_RAM_SWAP(int TMM[][2], int TMS[]);
 
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]);
 

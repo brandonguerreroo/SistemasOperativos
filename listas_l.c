@@ -21,6 +21,7 @@ PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPagin
     nuevo->GCPU = 0;
     nuevo->P = 60;
     nuevo->numInstrucciones = numInstrucciones;
+    nuevo->numPaginas = numeroPaginas;
     if(nodoCopiar == NULL){
         nuevo->paginas = malloc(numeroPaginas * sizeof(*nuevo->paginas));
         if (nuevo->paginas == NULL) {
@@ -146,25 +147,37 @@ void mostrarEncabezados(){
         mvprintw(7,124, "GCPU");
         refresh();
 }
+
+void limpiarTablas(){
+    for(int i = 0; i < 16 ; i++){
+        mvprintw(3+i,140, "                                                                       ");
+        mvprintw(24+i,140, "                                         ");
+    }
+}
+
 void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar){
+        limpiarTablas();
         mostrarEncabezados();
         mvprintw(1,151,"TMM");
         mvprintw(2,140,"Marco");
         mvprintw(2,150,"Dueño");
         mvprintw(2,160,"Reloj");
-        refresh();
         imprimirTMM(TMM);
+
         mvprintw(1,181,"TMS");
         mvprintw(2,175,"Marco");
         mvprintw(2,185,"Dueño");
         imprimirTMS(TMS);
-        refresh();
-        mvprintw(22,160,"TMP");
-        mvprintw(23,145,"Pagina");
-        mvprintw(23,155,"Bit");
-        mvprintw(23,165,"MarcoRAM");
-        mvprintw(23,175,"MarcoSWAP");
-        imprimirTMP(nodo_a_ejecutar);
+
+        mvprintw(22,155,"TMP");
+        mvprintw(23,140,"Pagina");
+        mvprintw(23,150,"Bit");
+        mvprintw(23,160,"MarcoRAM");
+        mvprintw(23,170,"MarcoSWAP");
+        if(nodo_a_ejecutar != NULL){
+            imprimirTMP(nodo_a_ejecutar);
+        }
+
         refresh();
 }
 

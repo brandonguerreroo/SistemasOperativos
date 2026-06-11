@@ -367,9 +367,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         nombre_archivo[0] = '\0';
 
         if(kbhit()){
-            move(numLineaComando,0);
-            clrtoeol();
-            refresh();
+            limpiarLinea(numLineaComando);
             mvscanw(numLineaComando,4,"%49[^\n]",cad);
         }
         else{
@@ -425,11 +423,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0') && (noinst[0] == '\0')){
             int numeroDeInstrucciones;
-            move(5,0);
-            clrtoeol();
-            move(numFilaEjecucion,0);
-            clrtoeol();
-            refresh();
+            limpiarLinea(numLineaErrorLista);
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
             if (archivo == NULL) 
             {
@@ -547,7 +541,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    int numPaginas = nodoCopiar->numPaginas;
                     PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas,nodoCopiar->numInstrucciones, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
@@ -582,7 +576,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    int numPaginas = nodoCopiar->numPaginas;
                     PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
@@ -707,7 +701,6 @@ int main(){
         refresh();
         //sleep(1);
         if(ejecuta == false){
-            
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
             if(salir == true){
                 continue;
@@ -718,9 +711,6 @@ int main(){
         cortar = false;
 
 
-        limpiar();
-        imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
-        
         if(ejecucion.sig == NULL){
             while(suspendidos.sig != NULL){
                 PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
@@ -731,9 +721,7 @@ int main(){
                     break;
                 }
             }
-            limpiar();
-            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
-        
+
             //Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
             PCB *meterEjecucion = buscar_por_prioridad(&listos);
             //PCB *meterEjecucion = sacarFrente(&listos);
@@ -741,7 +729,7 @@ int main(){
             if(meterEjecucion == NULL){
                 continue;
             }
-            
+        
             insertar(&ejecucion, meterEjecucion); 
 
         }
@@ -751,22 +739,16 @@ int main(){
         restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-        //CAMBIAR
-        /*pagina_instruccion = (nodo_a_ejecutar->PC)/4;
-        if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-            cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
-            imprimirTMM(TMM);
-        }*/
+       
+        mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
+        calcularPorcentajes_RAM_SWAP(TMM,TMS);
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
+        usleep(500000);
 
-        //mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
-        mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
-        refresh();
+
         int qua = 0;
-        //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
-        //GCPU_temp = 0;
         int i = 0;
         entrar = false;
         mataEjecucion = false;
@@ -784,15 +766,16 @@ int main(){
 
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
 
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &ejecucion, &suspendidos);
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &listos, &ejecucion, &suspendidos);
                 PCB *procesoSuspendido = sacarFrente(&ejecucion);
                 guardarContexto(procesoSuspendido, copiaLinea);
                 insertar(&suspendidos, procesoSuspendido);
                 guardarTiempos(procesoSuspendido);
+                limpiar();
+                imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
+        
                 //CAMBIAR   aqui va lo  del reloj
                 entroSuspendidos = true;
-                //imprimirTMM(TMM);
-                //CAMBIAR cuando se llena la RAM ya no se puede salir
                 break;
             }
             else{
@@ -934,7 +917,7 @@ int main(){
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
             //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
             refresh();
-            usleep(500000);
+            usleep(50000);
             if(instJNZ == false){
                 PC++;
             }
@@ -962,6 +945,8 @@ int main(){
                 break;
             }
         }
+        mostrarPantalla(TMS, TMM, NULL);
+        calcularPorcentajes_RAM_SWAP(TMM,TMS);
         cerrarArch_error(0); // Este nada mas cierra el archivo
         if(mataEjecucion){
             continue;
