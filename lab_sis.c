@@ -765,7 +765,7 @@ int main(){
             desplazamiento = PC%4;
 
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-
+                
                 cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &listos, &ejecucion, &suspendidos);
                 PCB *procesoSuspendido = sacarFrente(&ejecucion);
                 guardarContexto(procesoSuspendido, copiaLinea);
@@ -774,11 +774,12 @@ int main(){
                 limpiar();
                 imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
         
-                //CAMBIAR   aqui va lo  del reloj
                 entroSuspendidos = true;
                 break;
             }
-            else{
+            else if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 1){
+                int indiceTMM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
+                TMM[indiceTMM][1] = 1;
                 marcoRAM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
                 direccionFisica = (marcoRAM * 4 * tam_linea) + (desplazamiento * tam_linea);
                 strncpy(linea, RAM + direccionFisica, 64);

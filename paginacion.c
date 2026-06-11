@@ -51,6 +51,39 @@ int buscarMarcoPaginaLibreRAM(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *su
     bool actualizoPCB = false;
     while(1){
         if(TMM[reloj][1] == 0){
+            PID_proceso_desalojado = TMM[reloj][0];
+            if(PID_proceso_desalojado != 0){
+                procesoDesalojado = buscar_sacar(ejecucion, PID_proceso_desalojado, 1);
+                if(procesoDesalojado == NULL){
+                    procesoDesalojado = buscar_sacar(listos, PID_proceso_desalojado, 1);
+                    if(procesoDesalojado == NULL){
+                        procesoDesalojado = buscar_sacar(suspendidos, PID_proceso_desalojado, 1);
+                        if(procesoDesalojado == NULL){
+                            mvprintw(numLineaErrorLista,4,"ERROR de TMM. No se encuentra en ninguna lista.");
+                            refresh();
+                            sleep(1);
+                            limpiarLinea(numLineaErrorLista);
+                        }
+                    }
+                }
+                
+                for(int i = 0; i < procesoDesalojado->numPaginas; i++){
+                    // Actualizar PCB del proceso desalojado
+                    if ((procesoDesalojado->paginas[i][1]) == reloj){
+                        procesoDesalojado->paginas[i][0] = 0;
+                        procesoDesalojado->paginas[i][1] = 0;
+                        actualizoPCB = true;
+                        break;
+                    }
+                }
+                if(actualizoPCB == false){
+                    mvprintw(numLineaErrorLista,4,"ERROR de TMP. No se encontró ese marco de RAM en la TMP");
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                }
+                actualizoPCB = false;
+            }
             TMM[reloj][1] = 1;
             paginaLibre = reloj;
             if(reloj == 15){
@@ -62,36 +95,6 @@ int buscarMarcoPaginaLibreRAM(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *su
             return paginaLibre;
         }
         else if(TMM[reloj][1] == 1){
-            PID_proceso_desalojado = TMM[reloj][0];
-            procesoDesalojado = buscar_sacar(ejecucion, PID_proceso_desalojado, 1);
-            if(procesoDesalojado == NULL){
-                procesoDesalojado = buscar_sacar(listos, PID_proceso_desalojado, 1);
-                if(procesoDesalojado == NULL){
-                    procesoDesalojado = buscar_sacar(suspendidos, PID_proceso_desalojado, 1);
-                    if(procesoDesalojado == NULL){
-                    mvprintw(numLineaErrorLista,4,"ERROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOR");
-                    refresh();
-                    sleep(1);
-                    limpiarLinea(numLineaErrorLista);
-                    }
-                }
-            }
-            for(int i = 0; i < procesoDesalojado->numPaginas; i++){
-                // Actualizar PCB del proceso desalojado
-                if ((procesoDesalojado->paginas[i][1]) == reloj){
-                    procesoDesalojado->paginas[i][0] = 0;
-                    procesoDesalojado->paginas[i][1] = 0;
-                    actualizoPCB = true;
-                    break;
-                }
-            }
-            if(actualizoPCB == false){
-                mvprintw(numLineaErrorLista,4,"ERROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOR 2");
-                refresh();
-                sleep(1);
-                limpiarLinea(numLineaErrorLista);
-            }
-            actualizoPCB = false;
             TMM[reloj][1] = 0;
             if(reloj == 15){
                 reloj = 0;
