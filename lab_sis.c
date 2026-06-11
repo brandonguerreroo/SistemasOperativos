@@ -42,14 +42,13 @@ bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar 
 
 char RAM[4096]; // 64 * 64
 int TMS[marcosSWAP] = {0};
-int TMM[marcosRAM] = {0};
+int TMM[marcosRAM][2] = {0};
 char nombreArchivoSWAP[] = "memoriavirtual.bin";
 
 int kbhit(void);
 void limpiarLinea(int num)
 {
-    move(num,4);
-    clrtoeol();
+    mvprintw(num, 4, "                                                                                                                                  ");
     refresh();
 }
 int cerrarArch_error(int num){
@@ -266,8 +265,7 @@ int JNZ(char reg_to[], bool *instJNZ, int *i){
 
 void limpiar(){  //Limpia la pantalla desde la linea 8 hasta el ultimo renglon que se imprimio
     for(int l = 8; l <= numLineaLista; l++){
-        move(l,0);
-        clrtoeol();
+        mvprintw(l, 4, "                                                                                                                                  ");
     }
     refresh();
     numLineaLista = 8;   
@@ -283,7 +281,7 @@ void guardarContexto(PCB *nodo, char linea[])
     nodo->PC = PC;
     nodo->CPU = CPU_temp / 2;  //Actualizar los valores para este nodo
     nodo->GCPU = GCPU_temp / 2;
-    if(((buscarPorGID(&listos, nodo->GID)) == NULL) && (terminoProceso == true)){
+    if(((buscarPorGID(&listos, nodo->GID)) == NULL) && (terminoProceso == true) && ((buscarPorGID(&suspendidos, nodo->GID)) == NULL)){
         numeroDeGrupos--;
     }
     // Esto nos sirve para no hacer division sobre cero.
@@ -295,6 +293,7 @@ void guardarContexto(PCB *nodo, char linea[])
     }
     nodo->P = base + ( nodo->CPU / 2 ) + ( nodo->GCPU / (4.0 * Wk) );
     actualizar_PCBs(&listos,GCPU_temp, nodo->GID, Wk, base); //actualizar los valores para los demas procesos del mismo grupo
+    actualizar_PCBs(&suspendidos,GCPU_temp, nodo->GID, Wk, base);
 }
 
 void meterEnTerminados(char linea[]){
@@ -313,7 +312,7 @@ void meterEnTerminados(char linea[]){
 int matar(int num_PID){
     PCB *matar;
     if((matar = buscar_sacar(&listos, num_PID, 0)) != NULL){
-        if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL)){
+        if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL) && ((buscarPorGID(&suspendidos, matar->GID)) == NULL)){
             numeroDeGrupos--;
         }
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
@@ -328,6 +327,15 @@ int matar(int num_PID){
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
         insertar(&terminados, matar);
         return 1;
+    }
+    else if((matar = buscar_sacar(&suspendidos, num_PID, 0)) != NULL){
+        if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL) && ((buscarPorGID(&suspendidos, matar->GID)) == NULL)){
+            numeroDeGrupos--;
+        }
+        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargas nuevos
+        insertar(&terminados, matar);
+        return 0;
     }
     else{
         mvprintw(5,4,"No existe ese proceso o ya se encuentra en terminados");
@@ -359,9 +367,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         nombre_archivo[0] = '\0';
 
         if(kbhit()){
-            move(numLineaComando,0);
-            clrtoeol();
-            refresh();
+            limpiarLinea(numLineaComando);
             mvscanw(numLineaComando,4,"%49[^\n]",cad);
         }
         else{
@@ -417,11 +423,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         else if((strcmp(comando_to,"ejecuta") == 0) && (archivo_to[0] != '\0') && (noinst[0] == '\0')){
             int numeroDeInstrucciones;
-            move(5,0);
-            clrtoeol();
-            move(numFilaEjecucion,0);
-            clrtoeol();
-            refresh();
+            limpiarLinea(numLineaErrorLista);
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
             if (archivo == NULL) 
             {
@@ -699,7 +701,6 @@ int main(){
         refresh();
         //sleep(1);
         if(ejecuta == false){
-            
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
             if(salir == true){
                 continue;
@@ -710,9 +711,6 @@ int main(){
         cortar = false;
 
 
-        limpiar();
-        imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
-        
         if(ejecucion.sig == NULL){
             while(suspendidos.sig != NULL){
                 PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
@@ -723,9 +721,7 @@ int main(){
                     break;
                 }
             }
-            limpiar();
-            imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
-        
+
             //Comparar todas las prioridades de la lista de listos para meter a ejecucion (el de la prioridad mas alta que es el numero mas ). 
             PCB *meterEjecucion = buscar_por_prioridad(&listos);
             //PCB *meterEjecucion = sacarFrente(&listos);
@@ -733,7 +729,7 @@ int main(){
             if(meterEjecucion == NULL){
                 continue;
             }
-            
+        
             insertar(&ejecucion, meterEjecucion); 
 
         }
@@ -749,24 +745,16 @@ int main(){
             cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
             imprimirTMM(TMM);
         }*/
-        
-        arc_instrucciones = fopen(nodo_a_ejecutar->nombre_proceso, "r");
-        if (arc_instrucciones == NULL){
-            mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado.");
-            meterEnTerminados(copiaLinea);
-            refresh();
-            sleep(1);
-            limpiarLinea(numLineaErrorLista);
-            continue;
-        }
-
+       
+       
+        mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
+        calcularPorcentajes_RAM_SWAP(TMM,TMS);
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
+        usleep(500000);
 
-        mvprintw(1,4,"PC\t\tIR\t\tEAX\t\tEBX\t\tECX\t\tEDX\t  CPU\t    GCPU");
-        mvprintw(7,4,"PID   GID   Nombre\t\tEstado\t\tPC\tIR\t\t\tEAX\t\tEBX\t\tECX\t\tEDX     P     CPU   GCPU");
-        refresh();
+
         int qua = 0;
         //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
         //GCPU_temp = 0;
@@ -792,10 +780,11 @@ int main(){
                 guardarContexto(procesoSuspendido, copiaLinea);
                 insertar(&suspendidos, procesoSuspendido);
                 guardarTiempos(procesoSuspendido);
-                //CAMBIAR   aqui va lo  del reloj
-                entroSuspendidos = true;
                 limpiar();
                 imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
+        
+                //CAMBIAR   aqui va lo  del reloj
+                entroSuspendidos = true;
                 //imprimirTMM(TMM);
                 //CAMBIAR cuando se llena la RAM ya no se puede salir
                 break;
@@ -823,9 +812,7 @@ int main(){
             inst_to[0] = '\0';
             reg_to[0] = '\0';
             rv_to[0] = '\0';
-            
-            move(numFilaEjecucion,0);
-            clrtoeol();
+            limpiarLinea(numFilaEjecucion);
             refresh();
             mvprintw(numFilaEjecucion,4,"%d",PC);
             refresh();
@@ -969,6 +956,8 @@ int main(){
                 break;
             }
         }
+        mostrarPantalla(TMS, TMM, NULL);
+        calcularPorcentajes_RAM_SWAP(TMM,TMS);
         cerrarArch_error(0); // Este nada mas cierra el archivo
         if(mataEjecucion){
             continue;
