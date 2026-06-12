@@ -124,13 +124,19 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 11:
-             mvprintw(numLineaErrorLista,4,"%s\t%d\tPC no valido en instruccion JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC no es un numero en instruccion JNZ", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 12:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 13:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC excede el numero de instrucciones del archivo en instruccion JNZ", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -242,7 +248,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     
     return 0;
 }
-int JNZ(char reg_to[], bool *instJNZ, int *i){
+int JNZ(char reg_to[], bool *instJNZ, PCB *proceso){
     int len = strlen(reg_to);
     for(int j = 0; j < len; j++){   
             if (reg_to[j] < '0' || reg_to[j] > '9'){
@@ -251,12 +257,13 @@ int JNZ(char reg_to[], bool *instJNZ, int *i){
             }
     }
     int valor = atoi(reg_to);
+
+    if(valor > proceso->numInstrucciones){
+        cerrarArch_error(13);
+        return 1;
+    }
     
     if(ECX != 0){
-        //if(valor <= PC){ // 
-            *i = 0;
-            rewind(arc_instrucciones);
-        //}
         PC = valor;
         *instJNZ = true;
     }
@@ -745,11 +752,10 @@ int main(){
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
-        usleep(500000);
+        usleep(500);
 
 
         int qua = 0;
-        int i = 0;
         entrar = false;
         mataEjecucion = false;
         instJNZ = false;
@@ -873,7 +879,7 @@ int main(){
             }
             else if(strcmp(inst_to,"JNZ") == 0 ){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){     
-                    if(JNZ(reg_to, &instJNZ, &i) != 0){
+                    if(JNZ(reg_to, &instJNZ, nodo_a_ejecutar) != 0){
                         meterEnTerminados(copiaLinea);
                         error_archivo = true;
                         break;

@@ -44,29 +44,26 @@ int buscarMarcoPaginaLibreSWAP(int TMS[]){
     return -1; //Nunca llega aqui
 }
 
-int buscarMarcoPaginaLibreRAM(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos){
+int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos){
     int paginaLibre;
-    int PID_proceso_desalojado;
+    int GID_proceso_desalojado;
     PCB *procesoDesalojado;
     bool actualizoPCB = false;
     while(1){
         if(TMM[reloj][1] == 0){
-            PID_proceso_desalojado = TMM[reloj][0];
-            if(PID_proceso_desalojado != 0){
-                procesoDesalojado = buscar_sacar(ejecucion, PID_proceso_desalojado, 1);
-                if(procesoDesalojado == NULL){
-                    procesoDesalojado = buscar_sacar(listos, PID_proceso_desalojado, 1);
-                    if(procesoDesalojado == NULL){
-                        procesoDesalojado = buscar_sacar(suspendidos, PID_proceso_desalojado, 1);
-                        if(procesoDesalojado == NULL){
+            GID_proceso_desalojado = TMM[reloj][0];
+            if(GID_proceso_desalojado != 0){
+                if( (procesoDesalojado = buscarPorGID(ejecucion, GID_proceso_desalojado)) == NULL ){
+                    if( (procesoDesalojado = buscarPorGID(listos, GID_proceso_desalojado)) == NULL ){
+                        if( (procesoDesalojado = buscarPorGID(suspendidos, GID_proceso_desalojado)) == NULL ){
                             mvprintw(numLineaErrorLista,4,"ERROR de TMM. No se encuentra en ninguna lista.");
                             refresh();
                             sleep(1);
                             limpiarLinea(numLineaErrorLista);
                         }
                     }
+
                 }
-                
                 for(int i = 0; i < procesoDesalojado->numPaginas; i++){
                     // Actualizar PCB del proceso desalojado
                     if ((procesoDesalojado->paginas[i][1]) == reloj){
@@ -111,14 +108,14 @@ void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, in
     int marcoLibre_RAM;
     char linea[64];
     marco_de_la_pagina_en_swap = proceso->paginas[pagina_instruccion][2];
-    marcoLibre_RAM = buscarMarcoPaginaLibreRAM(TMM, listos, ejecucion, suspendidos);
+    marcoLibre_RAM = algoritmo_reloj(TMM, listos, ejecucion, suspendidos);
     if((marcoLibre_RAM >= 0)  && (marcoLibre_RAM <= 15)){
         fseek(SWAP, marco_de_la_pagina_en_swap * 4 * tam_linea, SEEK_SET);
         for(int i = 0; i < 4; i++){
             fread(linea, sizeof(char), 64, SWAP);
             memcpy(RAM + (marcoLibre_RAM * 4 * tam_linea) + (i * tam_linea), linea, 64);
         }
-        TMM[marcoLibre_RAM][0] = proceso->PID;
+        TMM[marcoLibre_RAM][0] = proceso->GID;
         proceso->paginas[pagina_instruccion][0] = 1;
         proceso->paginas[pagina_instruccion][1] = marcoLibre_RAM;
     }
@@ -150,7 +147,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
             }
             
         }
-        TMS[marcoLibre_SWAP] = proceso->PID;
+        TMS[marcoLibre_SWAP] = proceso->GID;
         proceso->paginas[i][0] = 0;
         proceso->paginas[i][1] = 0;
         proceso->paginas[i][2] = marcoLibre_SWAP;

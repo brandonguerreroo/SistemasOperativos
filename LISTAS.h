@@ -66,7 +66,7 @@ int calcularNumPaginas(int numeroInstrucciones);
 
 int buscarMarcoPaginaLibreSWAP(int TMS[]);
 
-int buscarMarcoPaginaLibreRAM(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos);
+int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos);
 
 void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *listos, PCB *ejecucion, PCB *suspendidos);
 
