@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <time.h>
 
+int reloj = 0;
+
 int calcularPaginasLibresSWAP(int TMS[]){
     int paginasLibresSWAP = 0;
     for(int i = 0; i < marcosSWAP; i++){
@@ -42,36 +44,84 @@ int buscarMarcoPaginaLibreSWAP(int TMS[]){
     return -1; //Nunca llega aqui
 }
 
-int buscarMarcoPaginaLibreRAM(int TMM[][2]){
-    for(int i = 0; i < marcosRAM; i++){
-        if(TMM[i][0] == 0){
-            return i;
+int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos){
+    int paginaLibre;
+    int GID_proceso_desalojado;
+    PCB *procesoDesalojado;
+    bool actualizoPCB = false;
+    while(1){
+        if(TMM[reloj][1] == 0){
+            GID_proceso_desalojado = TMM[reloj][0];
+            if(GID_proceso_desalojado != 0){
+                
+                if( (procesoDesalojado = buscarPorGID(ejecucion, GID_proceso_desalojado)) == NULL ){
+                    
+                    if( (procesoDesalojado = buscarPorGID(listos, GID_proceso_desalojado)) == NULL ){
+                        
+                        if( (procesoDesalojado = buscarPorGID(suspendidos, GID_proceso_desalojado)) == NULL ){
+                            mvprintw(numLineaErrorLista,4,"ERROR de TMM. No se encuentra en ninguna lista.");
+                            refresh();
+                            sleep(1);
+                            limpiarLinea(numLineaErrorLista);
+                        }
+                    }
+
+                }
+                for(int i = 0; i < procesoDesalojado->numPaginas; i++){
+                    // Actualizar PCB del proceso desalojado
+                    if ((procesoDesalojado->paginas[i][1]) == reloj){
+                        procesoDesalojado->paginas[i][0] = 0;
+                        procesoDesalojado->paginas[i][1] = 0;
+                        actualizoPCB = true;
+                        break;
+                    }
+                }
+                if(actualizoPCB == false){
+                    mvprintw(numLineaErrorLista,4,"ERROR de TMP. No se encontró ese marco de RAM en la TMP");
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                }
+                actualizoPCB = false;
+            }
+            TMM[reloj][1] = 1;
+            paginaLibre = reloj;
+            if(reloj == 15){
+                reloj = 0;
+            }
+            else{
+                reloj++;
+            }
+            return paginaLibre;
+        }
+        else if(TMM[reloj][1] == 1){
+            TMM[reloj][1] = 0;
+            if(reloj == 15){
+                reloj = 0;
+            }
+            else{
+                reloj++;
+            }
         }
     }
-    return -1;
 }
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos){
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *listos, PCB *ejecucion, PCB *suspendidos){
     int marco_de_la_pagina_en_swap;
     int marcoLibre_RAM;
     char linea[64];
     marco_de_la_pagina_en_swap = proceso->paginas[pagina_instruccion][2];
-    marcoLibre_RAM = buscarMarcoPaginaLibreRAM(TMM);
+    marcoLibre_RAM = algoritmo_reloj(TMM, listos, ejecucion, suspendidos);
     if((marcoLibre_RAM >= 0)  && (marcoLibre_RAM <= 15)){
         fseek(SWAP, marco_de_la_pagina_en_swap * 4 * tam_linea, SEEK_SET);
         for(int i = 0; i < 4; i++){
             fread(linea, sizeof(char), 64, SWAP);
             memcpy(RAM + (marcoLibre_RAM * 4 * tam_linea) + (i * tam_linea), linea, 64);
         }
-        TMM[marcoLibre_RAM][0] = proceso->PID;
+        TMM[marcoLibre_RAM][0] = proceso->GID;
         proceso->paginas[pagina_instruccion][0] = 1;
         proceso->paginas[pagina_instruccion][1] = marcoLibre_RAM;
     }
-    /*mvprintw(numLineaErrorLista,4,"ERROR, no hay memoria RAM");
-    refresh();
-    sleep(1);
-    limpiarLinea(numLineaErrorLista);*/
-    
 }
 
 void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso){
@@ -100,7 +150,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
             }
             
         }
-        TMS[marcoLibre_SWAP] = proceso->PID;
+        TMS[marcoLibre_SWAP] = proceso->GID;
         proceso->paginas[i][0] = 0;
         proceso->paginas[i][1] = 0;
         proceso->paginas[i][2] = marcoLibre_SWAP;
@@ -110,7 +160,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
-    numero_aleatorio = 2;
+    numero_aleatorio = 0;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }
@@ -131,7 +181,7 @@ void imprimirTMS(int TMS[]){
 }
 
 void imprimirTMP(PCB *nodo_a_ejecutar){
-    int paginas = calcularNumPaginas(nodo_a_ejecutar->numInstrucciones);
+    int paginas = nodo_a_ejecutar->numPaginas;
     if(paginas > 16){
         paginas = 16;
     }
@@ -166,15 +216,15 @@ void calcularPorcentajes_RAM_SWAP(int TMM[][2], int TMS[]){
     mvprintw(24,190, "                            ");
     mvprintw(25,190, "                            ");
 
-    mvprintw(24,190, "USO RAM:  %f %%", usoRAM);
-    mvprintw(25,190, "USO SWAP: %f %%", usoSWAP);
+    mvprintw(24,190, "USO RAM:  %.3f %%", usoRAM);
+    mvprintw(25,190, "USO SWAP: %.3f %%", usoSWAP);
 }
 
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
     int marcoRAM;
     int marcoSWAP;
     int entradasTMP;
-    entradasTMP = calcularNumPaginas(proceso->numInstrucciones); 
+    entradasTMP = proceso->numPaginas; 
     for(int i = 0 ; i < entradasTMP ; i++){
         proceso->paginas[i][0] = 0;
         marcoRAM = proceso->paginas[i][1];
@@ -195,7 +245,7 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
             return 0;
         }
         paginasLibres = calcularPaginasLibresSWAP(TMS);
-        numeroPaginas = calcularNumPaginas((nuevos->sig)->numInstrucciones);
+        numeroPaginas = (nuevos->sig)->numPaginas;
 
         if(paginasLibres >= numeroPaginas){
             PCB *nuevo = sacarFrente(nuevos);

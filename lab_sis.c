@@ -124,13 +124,19 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 11:
-             mvprintw(numLineaErrorLista,4,"%s\t%d\tPC no valido en instruccion JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC no es un numero en instruccion JNZ", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 12:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC); //
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 13:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC excede el numero de instrucciones del archivo en instruccion JNZ", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -242,7 +248,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
     
     return 0;
 }
-int JNZ(char reg_to[], bool *instJNZ, int *i){
+int JNZ(char reg_to[], bool *instJNZ, PCB *proceso){
     int len = strlen(reg_to);
     for(int j = 0; j < len; j++){   
             if (reg_to[j] < '0' || reg_to[j] > '9'){
@@ -251,12 +257,13 @@ int JNZ(char reg_to[], bool *instJNZ, int *i){
             }
     }
     int valor = atoi(reg_to);
+
+    if(valor > proceso->numInstrucciones){
+        cerrarArch_error(13);
+        return 1;
+    }
     
     if(ECX != 0){
-        //if(valor <= PC){ // 
-            *i = 0;
-            rewind(arc_instrucciones);
-        //}
         PC = valor;
         *instJNZ = true;
     }
@@ -541,7 +548,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    int numPaginas = nodoCopiar->numPaginas;
                     PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas,nodoCopiar->numInstrucciones, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
@@ -576,7 +583,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
                 if(i > numeroDeInstruccion){
                     PID++;
-                    int numPaginas = calcularNumPaginas(nodoCopiar->numInstrucciones);
+                    int numPaginas = nodoCopiar->numPaginas;
                     PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
@@ -739,26 +746,16 @@ int main(){
         restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-        //CAMBIAR
-        /*pagina_instruccion = (nodo_a_ejecutar->PC)/4;
-        if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-            cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion);
-            imprimirTMM(TMM);
-        }*/
-       
        
         mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
         calcularPorcentajes_RAM_SWAP(TMM,TMS);
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
-        usleep(500000);
+        usleep(500);
 
 
         int qua = 0;
-        //CPU_temp = 0;    //no se debe reiniciar a 0 ya que establecemos el valor de estos dos al restaurar contexto
-        //GCPU_temp = 0;
-        int i = 0;
         entrar = false;
         mataEjecucion = false;
         instJNZ = false;
@@ -774,8 +771,8 @@ int main(){
             desplazamiento = PC%4;
 
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &ejecucion, &suspendidos);
+                
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &listos, &ejecucion, &suspendidos);
                 PCB *procesoSuspendido = sacarFrente(&ejecucion);
                 guardarContexto(procesoSuspendido, copiaLinea);
                 insertar(&suspendidos, procesoSuspendido);
@@ -783,13 +780,12 @@ int main(){
                 limpiar();
                 imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
         
-                //CAMBIAR   aqui va lo  del reloj
                 entroSuspendidos = true;
-                //imprimirTMM(TMM);
-                //CAMBIAR cuando se llena la RAM ya no se puede salir
                 break;
             }
-            else{
+            else if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 1){
+                int indiceTMM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
+                TMM[indiceTMM][1] = 1;
                 marcoRAM = nodo_a_ejecutar->paginas[pagina_instruccion][1];
                 direccionFisica = (marcoRAM * 4 * tam_linea) + (desplazamiento * tam_linea);
                 strncpy(linea, RAM + direccionFisica, 64);
@@ -883,7 +879,7 @@ int main(){
             }
             else if(strcmp(inst_to,"JNZ") == 0 ){
                 if((reg_to[0] != '\0') && (rv_to[0] == '\0') && (coma == false)){     
-                    if(JNZ(reg_to, &instJNZ, &i) != 0){
+                    if(JNZ(reg_to, &instJNZ, nodo_a_ejecutar) != 0){
                         meterEnTerminados(copiaLinea);
                         error_archivo = true;
                         break;

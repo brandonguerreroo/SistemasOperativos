@@ -20,6 +20,7 @@ typedef struct PCB {
     int EAX,EBX,ECX,EDX;
     int CPU, GCPU, P; // P es Prioridad.
     int numInstrucciones;
+    int numPaginas;
     time_t tiempo_de_salida;
     int espera;
     int (*paginas)[3];
@@ -65,9 +66,9 @@ int calcularNumPaginas(int numeroInstrucciones);
 
 int buscarMarcoPaginaLibreSWAP(int TMS[]);
 
-int buscarMarcoPaginaLibreRAM(int TMM[][2]);
+int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos);
 
-void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *ejecucion, PCB *suspendidos);
+void cargar_a_memoria_RAM(FILE *SWAP, char RAM[], int TMM[][2], PCB *proceso, int pagina_instruccion, PCB *listos, PCB *ejecucion, PCB *suspendidos);
 
 void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int numPaginas, int TMS[], PCB *proceso);
 

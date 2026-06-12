@@ -21,6 +21,7 @@ PCB *crear_nodo(int pid, int gid, char nombre_proceso[], int PC, int numeroPagin
     nuevo->GCPU = 0;
     nuevo->P = 60;
     nuevo->numInstrucciones = numInstrucciones;
+    nuevo->numPaginas = numeroPaginas;
     if(nodoCopiar == NULL){
         nuevo->paginas = malloc(numeroPaginas * sizeof(*nuevo->paginas));
         if (nuevo->paginas == NULL) {
