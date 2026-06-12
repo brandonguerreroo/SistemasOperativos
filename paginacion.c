@@ -227,6 +227,7 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
         marcoRAM = proceso->paginas[i][1];
         marcoSWAP = proceso->paginas[i][2];
         TMM[marcoRAM][0] = 0;
+        TMM[marcoRAM][1] = 0;
         TMS[marcoSWAP] = 0;    
     }
 

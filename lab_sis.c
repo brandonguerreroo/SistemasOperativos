@@ -332,6 +332,7 @@ int matar(int num_PID){
         guardarContexto(matar, copiaLinea);
         terminoProceso = false;
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
         insertar(&terminados, matar);
         return 1;
     }
@@ -481,7 +482,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         else if((strcmp(comando_to, "fork") == 0) && (archivo_to[0] != '\0') && (noinst[0] != '\0')){
             char lineaFork[64];
             bool PID_no_number = false;
-            FILE *archivoFork;
             int longitud = strlen(archivo_to);
             for(int i = 0; i < longitud; i++){   
                 if (archivo_to[i] < '0' || archivo_to[i] > '9'){
@@ -527,7 +527,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 break;
             }
             if(((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL)){
-                archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
+                /*archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
                 if (archivoFork == NULL) 
                 {
                     mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
@@ -545,11 +545,11 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                         fprintf(stdout, "Error al cerrar el archivo.\n");
                     }   
                     archivoFork = NULL;
-                }
-                if(i > numeroDeInstruccion){
+                }*/
+                
+                if(nodoCopiar->numInstrucciones > numeroDeInstruccion){
                     PID++;
-                    int numPaginas = nodoCopiar->numPaginas;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas,nodoCopiar->numInstrucciones, nodoCopiar); 
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, nodoCopiar->numPaginas, nodoCopiar->numInstrucciones, nodoCopiar); 
                     insertar(&listos, nuevo); 
                     //no se debe actualizar el gcpu porque al salir el proceso en ejecucion se va a guardar gcpu para todo el grupo
                 }
@@ -562,29 +562,9 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
 
             else if((nodoCopiar = buscar_sacar(&listos, procesoPID_fork, 1)) != NULL){
-                archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
-                if (archivoFork == NULL) 
-                {
-                    mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
-                    refresh();
-                    sleep(1);
-                    limpiarLinea(numLineaErrorLista);
-                    continue;
-                } 
-                while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
-                    i++;
-                }
-                
-                if (archivoFork != NULL) {
-                    if(fclose(archivoFork) != 0) {
-                        fprintf(stdout, "Error al cerrar el archivo.\n");
-                    }   
-                    archivoFork = NULL;
-                }
-                if(i > numeroDeInstruccion){
+                if(nodoCopiar->numInstrucciones > numeroDeInstruccion){
                     PID++;
-                    int numPaginas = nodoCopiar->numPaginas;
-                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, nodoCopiar->numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
                     nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
                     insertar(&listos, nuevo);
                 }
@@ -595,12 +575,28 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                     limpiarLinea(numLineaErrorLista);
                 }
             }
+            else if((nodoCopiar = buscar_sacar(&suspendidos, procesoPID_fork, 1)) != NULL){
+                if(nodoCopiar->numInstrucciones > numeroDeInstruccion){
+                    PID++;
+                    PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, nodoCopiar->numPaginas, nodoCopiar->numInstrucciones,nodoCopiar); 
+                    nuevo->GCPU = nodoCopiar->GCPU;  //se debe copiar porque el nuevo proceso pertenece al mismo grupo
+                    insertar(&listos, nuevo);
+                }
+                else{
+                    mvprintw(numLineaErrorLista,4,"Error, numero de instruccion no existe en el archivo.");
+                    refresh();
+                    sleep(1); 
+                    limpiarLinea(numLineaErrorLista);
+                }
+            }
+            
             else{
-                mvprintw(numLineaErrorLista,4,"Error, ese PID NO existe.");
+                mvprintw(numLineaErrorLista,4, "Error, ese PID NO existe.");
                 refresh();
                 sleep(1);
                 limpiarLinea(numLineaErrorLista);        
             }
+            
             limpiar();
             //Imprimir cada que se copie un proceso
             imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
@@ -615,7 +611,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
         }
         
         if(num_ciclo == 1){  
-            if((listos.sig != NULL) || (suspendidos.sig != NULL)){             
+            if((listos.sig != NULL) || (suspendidos.sig != NULL) || (nuevos.sig != NULL)){             
                 break;
             }
             else if(comando_to[0] == '\0' || strcmp(comando_to,"mata") == 0){
@@ -623,7 +619,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
         }
         if(num_ciclo == 2){
-            if((listos.sig != NULL && end == true) || (suspendidos.sig != NULL  && end == true)){ 
+            if((listos.sig != NULL && end == true) || (suspendidos.sig != NULL  && end == true) && (nuevos.sig != NULL  && end == true)){ 
                 *ejecuta = true;
                 break;
             }
@@ -752,9 +748,6 @@ int main(){
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
-        usleep(500);
-
-
         int qua = 0;
         entrar = false;
         mataEjecucion = false;

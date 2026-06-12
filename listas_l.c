@@ -84,7 +84,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-           mvprintw(*numLinea,76, "%d", temp->EAX);
+            mvprintw(*numLinea,76, "%d", temp->EAX);
             mvprintw(*numLinea,84, "%d", temp->EBX);
             mvprintw(*numLinea,92, "%d", temp->ECX);
             mvprintw(*numLinea,100, "%d", temp->EDX);
