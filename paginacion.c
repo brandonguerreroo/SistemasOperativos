@@ -62,7 +62,6 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
                             limpiarLinea(numLineaErrorLista);
                         }
                     }
-
                 }
                 for(int i = 0; i < procesoDesalojado->numPaginas; i++){
                     // Actualizar PCB del proceso desalojado
@@ -157,7 +156,8 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
-    numero_aleatorio = 0;
+    numero_aleatorio = (rand() % 3);
+    //numero_aleatorio = 2;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }
@@ -229,6 +229,15 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
         TMM[marcoRAM][0] = 0;
         TMM[marcoRAM][1] = 0;
         TMS[marcoSWAP] = 0;    
+    }
+
+}
+
+void limpiarTMP(PCB *proceso){
+    for(int i = 0; i < (proceso->numPaginas); i++){
+        proceso->paginas[i][0] = 0;
+        proceso->paginas[i][1] = 0;
+        proceso->paginas[i][2] = 0;
     }
 
 }

@@ -39,7 +39,7 @@ int Q = 3;
 bool mataEjecucion = false;
 char copiaLinea[65];
 bool terminoProceso = false; // Se ocupa para verificar que un proceso va pasar a lista de terminados, nos sirve para el numeroDeGrupos
-
+bool ultimoProcesoGrupo = false;
 char RAM[4096]; // 64 * 64
 int TMS[marcosSWAP] = {0};
 int TMM[marcosRAM][2] = {0};
@@ -290,7 +290,9 @@ void guardarContexto(PCB *nodo, char linea[])
     nodo->GCPU = GCPU_temp / 2;
     if(((buscarPorGID(&listos, nodo->GID)) == NULL) && (terminoProceso == true) && ((buscarPorGID(&suspendidos, nodo->GID)) == NULL)){
         numeroDeGrupos--;
+        ultimoProcesoGrupo = true;
     }
+    
     // Esto nos sirve para no hacer division sobre cero.
     if(numeroDeGrupos == 0){
         Wk = 1.0;
@@ -310,6 +312,13 @@ void meterEnTerminados(char linea[]){
     guardarContexto(nodo, linea);
     terminoProceso = false;
     liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
+    /*if(ultimoProcesoGrupo){
+        limpiarTMP(nodo);
+        mostrarTablas(TMS,TMM,nodo);
+        sleep(1);
+        ultimoProcesoGrupo = false;
+    }*/
+    mostrarTablas(TMS,TMM,nodo);
     cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
     insertar(&terminados, nodo);
     limpiar();
@@ -321,8 +330,16 @@ int matar(int num_PID){
     if((matar = buscar_sacar(&listos, num_PID, 0)) != NULL){
         if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL) && ((buscarPorGID(&suspendidos, matar->GID)) == NULL)){
             numeroDeGrupos--;
+            ultimoProcesoGrupo = true;
         }
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        /*if(ultimoProcesoGrupo){
+            limpiarTMP(matar);
+            mostrarTablas(TMS,TMM,matar);
+            sleep(1);
+            ultimoProcesoGrupo = false;
+        }*/
+        mostrarTablas(TMS,TMM,matar);
         cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
         insertar(&terminados, matar);
         return 0;
@@ -332,6 +349,7 @@ int matar(int num_PID){
         guardarContexto(matar, copiaLinea);
         terminoProceso = false;
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        mostrarTablas(TMS,TMM,matar);
         cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
         insertar(&terminados, matar);
         return 1;
@@ -339,8 +357,16 @@ int matar(int num_PID){
     else if((matar = buscar_sacar(&suspendidos, num_PID, 0)) != NULL){
         if(((buscarPorGID(&listos, matar->GID)) == NULL) && ((buscarPorGID(&ejecucion, matar->GID)) == NULL) && ((buscarPorGID(&suspendidos, matar->GID)) == NULL)){
             numeroDeGrupos--;
+            ultimoProcesoGrupo = true;
         }
         liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        /*if(ultimoProcesoGrupo){
+            limpiarTMP(matar);
+            mostrarTablas(TMS,TMM,matar);
+            sleep(1);
+            ultimoProcesoGrupo = false;
+        }*/
+        mostrarTablas(TMS,TMM,matar);
         cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargas nuevos
         insertar(&terminados, matar);
         return 0;
@@ -520,33 +546,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             int i = 0;
             PCB *nodoCopiar;
             if(numeroDeInstruccion < 0){
-                mvprintw(numLineaErrorLista,4,"Error, numero de instruccion MUY grande");
+                mvprintw(numLineaErrorLista,4,"Error, numero de instruccion MUY grande"); // CAMBIAR checar
                 refresh();
                 sleep(1);
                 limpiarLinea(numLineaErrorLista);
                 break;
             }
             if(((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL)){
-                /*archivoFork = fopen(nodoCopiar->nombre_proceso, "r");
-                if (archivoFork == NULL) 
-                {
-                    mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
-                    refresh();
-                    sleep(1);
-                    limpiarLinea(numLineaErrorLista);
-                    continue;
-                } 
-                while(((fgets(lineaFork, sizeof(lineaFork), archivoFork)) != NULL)){
-                    i++;
-                }
-                
-                if (archivoFork != NULL) {
-                    if(fclose(archivoFork) != 0) {
-                        fprintf(stdout, "Error al cerrar el archivo.\n");
-                    }   
-                    archivoFork = NULL;
-                }*/
-                
                 if(nodoCopiar->numInstrucciones > numeroDeInstruccion){
                     PID++;
                     PCB *nuevo = crear_nodo(PID, nodoCopiar->GID, nodoCopiar->nombre_proceso,numeroDeInstruccion, nodoCopiar->numPaginas, nodoCopiar->numInstrucciones, nodoCopiar); 
@@ -742,7 +748,7 @@ int main(){
         restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-        mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
+        mostrarTablas(TMS, TMM, nodo_a_ejecutar);
         calcularPorcentajes_RAM_SWAP(TMM,TMS);
         limpiar();
         //Imprimir cada que cambie el que esta en ejecucion 
@@ -944,7 +950,7 @@ int main(){
                 break;
             }
         }
-        mostrarPantalla(TMS, TMM, NULL);
+        mostrarTablas(TMS, TMM, NULL);
         calcularPorcentajes_RAM_SWAP(TMM,TMS);
         cerrarArch_error(0); // Este nada mas cierra el archivo
         if(mataEjecucion){

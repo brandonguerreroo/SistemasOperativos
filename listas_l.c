@@ -155,9 +155,8 @@ void limpiarTablas(){
     }
 }
 
-void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar){
+void mostrarTablas(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar){
         limpiarTablas();
-        mostrarEncabezados();
         mvprintw(1,151,"TMM");
         mvprintw(2,140,"Marco");
         mvprintw(2,150,"Dueño");
