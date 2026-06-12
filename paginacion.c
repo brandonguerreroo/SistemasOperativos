@@ -53,11 +53,8 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
         if(TMM[reloj][1] == 0){
             GID_proceso_desalojado = TMM[reloj][0];
             if(GID_proceso_desalojado != 0){
-                
                 if( (procesoDesalojado = buscarPorGID(ejecucion, GID_proceso_desalojado)) == NULL ){
-                    
                     if( (procesoDesalojado = buscarPorGID(listos, GID_proceso_desalojado)) == NULL ){
-                        
                         if( (procesoDesalojado = buscarPorGID(suspendidos, GID_proceso_desalojado)) == NULL ){
                             mvprintw(numLineaErrorLista,4,"ERROR de TMM. No se encuentra en ninguna lista.");
                             refresh();
@@ -65,11 +62,10 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
                             limpiarLinea(numLineaErrorLista);
                         }
                     }
-
                 }
                 for(int i = 0; i < procesoDesalojado->numPaginas; i++){
-                    // Actualizar PCB del proceso desalojado
-                    if ((procesoDesalojado->paginas[i][1]) == reloj){
+                    // Actualizar PCB del proceso cuyo marco es desalojado y comprobar que ese marco si este en RAM 
+                    if (((procesoDesalojado->paginas[i][1]) == reloj) && (procesoDesalojado->paginas[i][0] == 1)){
                         procesoDesalojado->paginas[i][0] = 0;
                         procesoDesalojado->paginas[i][1] = 0;
                         actualizoPCB = true;
@@ -132,18 +128,23 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
     for(int i = 0; i < (numPaginas); i++){
         marcoLibre_SWAP = buscarMarcoPaginaLibreSWAP(TMS);
         fseek(archivoDestino, marcoLibre_SWAP * 4 * tam_linea, SEEK_SET); // Adelanta el archivo marcoLibre * 4 * 64 bytes desde el inicio
-        while ((fgets(linea, sizeof(linea), archivoOrigen)) != NULL){
+        while (((fgets(linea, sizeof(linea), archivoOrigen)) != NULL)){
             if(i == (numPaginas -1)){   //revisa todo el ultimo marco en busca del END
                 if(strcmp(linea, "END") == 0){
                     linea[3] = '\n';
+                    linea[4] = '\0';
+                    /*mvprintw(numLineaErrorLista, 4, "%s", linea);
+                    refresh();
+                    sleep(1);*/
                 }
             }
             size_t len = strlen(linea);
             if (len < 64) {
-                memset(linea + len, '0', 64 - len);
+                memset(linea + len, '-', 64 - len);
             }
             fwrite(linea, sizeof(char), 64, archivoDestino);
             contador++;
+            memset(linea, ' ', 64);
             if(contador == 4){
                 contador = 0;
                 break;
@@ -160,7 +161,8 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
-    numero_aleatorio = 0;
+    //numero_aleatorio = (rand() % 11);
+    //numero_aleatorio = 2;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }
@@ -226,11 +228,23 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
     int entradasTMP;
     entradasTMP = proceso->numPaginas; 
     for(int i = 0 ; i < entradasTMP ; i++){
+        if(proceso->paginas[i][0] == 1){
+            marcoRAM = proceso->paginas[i][1];
+            TMM[marcoRAM][0] = 0;
+            TMM[marcoRAM][1] = 0;
+        }
         proceso->paginas[i][0] = 0;
-        marcoRAM = proceso->paginas[i][1];
-        marcoSWAP = proceso->paginas[i][2];
-        TMM[marcoRAM][0] = 0;
-        TMS[marcoSWAP] = 0;    
+        marcoSWAP = proceso->paginas[i][2]; 
+        TMS[marcoSWAP] = 0;  
+    }
+
+}
+
+void limpiarTMP(PCB *proceso){
+    for(int i = 0; i < (proceso->numPaginas); i++){
+        proceso->paginas[i][0] = 0;
+        proceso->paginas[i][1] = 0;
+        proceso->paginas[i][2] = 0;
     }
 
 }

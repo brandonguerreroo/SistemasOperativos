@@ -55,7 +55,6 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
-            mvprintw(*numLinea,24, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
@@ -84,7 +83,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,32, "%s","Terminado");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
-           mvprintw(*numLinea,76, "%d", temp->EAX);
+            mvprintw(*numLinea,76, "%d", temp->EAX);
             mvprintw(*numLinea,84, "%d", temp->EBX);
             mvprintw(*numLinea,92, "%d", temp->ECX);
             mvprintw(*numLinea,100, "%d", temp->EDX);
@@ -155,9 +154,8 @@ void limpiarTablas(){
     }
 }
 
-void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar){
+void mostrarTablas(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar){
         limpiarTablas();
-        mostrarEncabezados();
         mvprintw(1,151,"TMM");
         mvprintw(2,140,"Marco");
         mvprintw(2,150,"Dueño");
@@ -284,6 +282,7 @@ PCB *buscarPorGID(PCB *lista, int num_GID){
 }
 
 void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista){
+    mostrarEncabezados();
     imprimir(ejecucion, 2, numLineaLista);
     imprimir(listos, 1, numLineaLista);
     imprimir(nuevos, 4, numLineaLista);

@@ -41,7 +41,7 @@ void mostrarEncabezados();
 
 void limpiarTablas();
 
-void mostrarPantalla(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar);
+void mostrarTablas(int TMS[], int TMM[][2], PCB *nodo_a_ejecutar);
 
 PCB *sacarFrente(PCB *lista);
 
@@ -83,6 +83,8 @@ void imprimirTMP(PCB *nodo_a_ejecutar);
 void calcularPorcentajes_RAM_SWAP(int TMM[][2], int TMS[]);
 
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]);
+
+void limpiarTMP(PCB *proceso);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
 
