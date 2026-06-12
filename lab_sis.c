@@ -742,7 +742,6 @@ int main(){
         restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
         strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
-       
         mostrarPantalla(TMS, TMM, nodo_a_ejecutar);
         calcularPorcentajes_RAM_SWAP(TMM,TMS);
         limpiar();

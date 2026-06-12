@@ -284,6 +284,7 @@ PCB *buscarPorGID(PCB *lista, int num_GID){
 }
 
 void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista){
+    mostrarEncabezados();
     imprimir(ejecucion, 2, numLineaLista);
     imprimir(listos, 1, numLineaLista);
     imprimir(nuevos, 4, numLineaLista);
