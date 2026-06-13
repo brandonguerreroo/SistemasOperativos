@@ -90,6 +90,6 @@ void limpiarTMP(PCB *proceso);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
 
-PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos);
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos, PCB *ejecucion, FILE *memoriaVirtual, char RAM[], int TMM[][2], int TMS[]);
 
 #endif

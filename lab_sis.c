@@ -774,12 +774,11 @@ int main(){
 
         if(ejecucion.sig == NULL){
             while(suspendidos.sig != NULL){
-                PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
+                PCB *nodo = sacarSuspendidos(&suspendidos,&listos,&ejecucion,memoriaVirtual,RAM, TMM, TMS);
                 
                 if(nodo != NULL){
-                    pagina_instruccion = nodo->PC/4;
-                    cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo, pagina_instruccion, &listos, &ejecucion, &suspendidos);
-                    calcularPorcentajes_RAM_SWAP(TMM,TMS);
+                    mvprintw(5,4,"%d", nodo->GID);
+                    refresh();
                     insertar(&listos, nodo);
                     mostrarTablas(TMS, TMM, nodo);
                 }
