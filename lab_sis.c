@@ -12,7 +12,6 @@
 #include "LISTAS.h"
 #include <time.h>
 
-FILE *arc_instrucciones;
 FILE *memoriaVirtual;
 int EAX = 0; 
 int EBX = 0; 
@@ -52,16 +51,7 @@ void limpiarLinea(int num)
     refresh();
 }
 int cerrarArch_error(int num){
-    if (arc_instrucciones != NULL) {
-        if(fclose(arc_instrucciones) != 0) {
-            fprintf(stdout, "Error al cerrar el archivo.\n");
-        }
-        arc_instrucciones = NULL;
-    }
-    
-    if (num == 0){
-        return 0;
-    }
+   
     switch(num){
         case 1:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a numero mayor de argumentos", copiaNombre_archivo, PC);
@@ -118,7 +108,7 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 10:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga (revisar archivo)", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga  o falta END (revisar archivo)", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -141,6 +131,23 @@ int cerrarArch_error(int num){
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
+        case 14:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tse rebasaron los limites de instruccion del archivo", copiaNombre_archivo, PC);
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 15:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tOVERFLOW en rv_token en instrucciones MOV,ADD,SUB,MUL,DIV", copiaNombre_archivo, PC);
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+            break;
+        case 16:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tOVERFLOW en numero de instruccion en JNZ", copiaNombre_archivo, PC);
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
     }
     
     return 0;
@@ -202,6 +209,10 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
             return 1;
         }
         else{
+            if(verificarOverflow(rv_to) == 1){
+                cerrarArch_error(15);
+                return 1;
+            }
             valor = atoi(rv_to);
         }
     }
@@ -251,14 +262,18 @@ int INC_DEC(char inst_to[], char reg_to[]){
 int JNZ(char reg_to[], bool *instJNZ, PCB *proceso){
     int len = strlen(reg_to);
     for(int j = 0; j < len; j++){   
-            if (reg_to[j] < '0' || reg_to[j] > '9'){
-                cerrarArch_error(11);
-                return 1;
-            }
+        if (reg_to[j] < '0' || reg_to[j] > '9'){
+            cerrarArch_error(11);
+            return 1;
+        }
+    }
+    if(verificarOverflow(reg_to) == 1){
+        cerrarArch_error(16);
+        return 1;
     }
     int valor = atoi(reg_to);
-
-    if(valor > proceso->numInstrucciones){
+ 
+    if(valor > (proceso->numInstrucciones -1)){
         cerrarArch_error(13);
         return 1;
     }
@@ -311,16 +326,17 @@ void meterEnTerminados(char linea[]){
     terminoProceso = true;
     guardarContexto(nodo, linea);
     terminoProceso = false;
-    liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
-    /*if(ultimoProcesoGrupo){
+    if(ultimoProcesoGrupo){
+        liberar_marcos_RAM_SWAP(nodo,TMM,TMS);
         limpiarTMP(nodo);
         mostrarTablas(TMS,TMM,nodo);
         sleep(1);
         ultimoProcesoGrupo = false;
-    }*/
+    }
+    insertar(&terminados, nodo);
     mostrarTablas(TMS,TMM,nodo);
     cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
-    insertar(&terminados, nodo);
+    
     limpiar();
     //Imprimir cada que cambie la lista de terminados
     imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
@@ -332,26 +348,34 @@ int matar(int num_PID){
             numeroDeGrupos--;
             ultimoProcesoGrupo = true;
         }
-        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
-        /*if(ultimoProcesoGrupo){
+        if(ultimoProcesoGrupo){
+            liberar_marcos_RAM_SWAP(matar,TMM,TMS);
             limpiarTMP(matar);
             mostrarTablas(TMS,TMM,matar);
             sleep(1);
             ultimoProcesoGrupo = false;
-        }*/
+        }
+        insertar(&terminados, matar);
         mostrarTablas(TMS,TMM,matar);
         cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
-        insertar(&terminados, matar);
+        
         return 0;
     }
     else if((matar = buscar_sacar(&ejecucion, num_PID, 0)) != NULL){
         terminoProceso = true;
         guardarContexto(matar, copiaLinea);
         terminoProceso = false;
-        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+        if(ultimoProcesoGrupo){
+            liberar_marcos_RAM_SWAP(matar,TMM,TMS);
+            limpiarTMP(matar);
+            mostrarTablas(TMS,TMM,matar);
+            sleep(1);
+            ultimoProcesoGrupo = false;
+        }
+        insertar(&terminados, matar);
         mostrarTablas(TMS,TMM,matar);
         cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS);
-        insertar(&terminados, matar);
+        
         return 1;
     }
     else if((matar = buscar_sacar(&suspendidos, num_PID, 0)) != NULL){
@@ -359,16 +383,24 @@ int matar(int num_PID){
             numeroDeGrupos--;
             ultimoProcesoGrupo = true;
         }
-        liberar_marcos_RAM_SWAP(matar,TMM,TMS);
-        /*if(ultimoProcesoGrupo){
+        
+        if(ultimoProcesoGrupo){
+            liberar_marcos_RAM_SWAP(matar,TMM,TMS);
             limpiarTMP(matar);
             mostrarTablas(TMS,TMM,matar);
             sleep(1);
             ultimoProcesoGrupo = false;
-        }*/
-        mostrarTablas(TMS,TMM,matar);
-        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargas nuevos
+        }
         insertar(&terminados, matar);
+        mostrarTablas(TMS,TMM,matar);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargar nuevos
+        return 0;
+    }
+    else if((matar = buscar_sacar(&nuevos, num_PID, 0)) != NULL){
+        numeroDeGrupos--;
+        insertar(&terminados, matar);
+        mostrarTablas(TMS,TMM,matar);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargar nuevos
         return 0;
     }
     else{
@@ -440,9 +472,15 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
+                if(verificarOverflow(archivo_to) == 1){
+                    mvprintw(numLineaErrorLista,4,"OVERFLOW en en PID de Mata"); // CAMBIAR checar
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    break;
+                }
                 procesoPID_mata = atoi(archivo_to);
-                if(matar(procesoPID_mata) == 1)
-                {
+                if(matar(procesoPID_mata) == 1){
                     mataEjecucion = true;
                 }
             }
@@ -459,8 +497,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             int numeroDeInstrucciones;
             limpiarLinea(numLineaErrorLista);
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
-            if (archivo == NULL) 
-            {
+            if (archivo == NULL){
                 mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
                 refresh();
                 sleep(1);
@@ -492,6 +529,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 mvprintw(numLineaErrorLista,4, "ERROR. Archivo no cabe en el SWAP");
                 refresh();
                 sleep(1);
+                limpiarLinea(numLineaErrorLista);
                 continue;
             }
 
@@ -520,6 +558,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
+                if(verificarOverflow(archivo_to) == 1){
+                    mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en en PID de Fork"); // CAMBIAR checar
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    break;
+                }
                 procesoPID_fork = atoi(archivo_to);
             }
             else{
@@ -538,6 +583,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(noinst_no_number == false){
+                if(verificarOverflow(noinst) == 1){
+                    mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en numero de instruccion de Fork"); // CAMBIAR checar
+                    refresh();
+                    sleep(1);
+                    limpiarLinea(numLineaErrorLista);
+                    break;
+                }
                 numeroDeInstruccion = atoi(noinst);
             }
             else{
@@ -545,13 +597,13 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             }
             int i = 0;
             PCB *nodoCopiar;
-            if(numeroDeInstruccion < 0){
+            /*if(numeroDeInstruccion < 0){
                 mvprintw(numLineaErrorLista,4,"Error, numero de instruccion MUY grande"); // CAMBIAR checar
                 refresh();
                 sleep(1);
                 limpiarLinea(numLineaErrorLista);
                 break;
-            }
+            }*/
             if(((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL)){
                 if(nodoCopiar->numInstrucciones > numeroDeInstruccion){
                     PID++;
@@ -595,7 +647,6 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                     limpiarLinea(numLineaErrorLista);
                 }
             }
-            
             else{
                 mvprintw(numLineaErrorLista,4, "Error, ese PID NO existe.");
                 refresh();
@@ -654,7 +705,7 @@ int main(){
     char linea[65];
     char *token;
     char inst_to[5];
-    char reg_to[5];
+    char reg_to[16];
     char rv_to[16]; //register-valor
     bool end = false;
     char *st = linea; // strsep modifica este puntero
@@ -709,6 +760,8 @@ int main(){
         mvprintw(0,4," ");
         refresh();
         //sleep(1);
+        limpiar();
+        imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         if(ejecuta == false){
             ciclo_kbhit(&cortar, nombre_archivo, &salir, &ejecuta, end, sizeof(nombre_archivo), 1);
             if(salir == true){
@@ -719,12 +772,16 @@ int main(){
         end = false;        //debe volver a falso
         cortar = false;
 
-
         if(ejecucion.sig == NULL){
             while(suspendidos.sig != NULL){
                 PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
+                
                 if(nodo != NULL){
+                    pagina_instruccion = nodo->PC/4;
+                    cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo, pagina_instruccion, &listos, &ejecucion, &suspendidos);
+                    calcularPorcentajes_RAM_SWAP(TMM,TMS);
                     insertar(&listos, nodo);
+                    mostrarTablas(TMS, TMM, nodo);
                 }
                 else{
                     break;
@@ -746,12 +803,14 @@ int main(){
         PCB *nodo_a_ejecutar = ejecucion.sig;
         copiaLinea[0] = '\0';
         restaurarContexto(nodo_a_ejecutar, linea, sizeof(linea));
+        limpiarLinea(numLineaErrorLista);
         strncpy(copiaNombre_archivo, nodo_a_ejecutar->nombre_proceso, sizeof(copiaNombre_archivo) - 1); // Para tener el nombre del archivo en global.
         copiaNombre_archivo[sizeof(copiaNombre_archivo)-1] = '\0';
         mostrarTablas(TMS, TMM, nodo_a_ejecutar);
         calcularPorcentajes_RAM_SWAP(TMM,TMS);
-        limpiar();
+        
         //Imprimir cada que cambie el que esta en ejecucion 
+        limpiar();
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         int qua = 0;
         entrar = false;
@@ -765,12 +824,18 @@ int main(){
                 }
                 entrar = true;
             }*/
+            if((PC > (nodo_a_ejecutar->numInstrucciones - 1))){
+                cerrarArch_error(14);
+                meterEnTerminados(copiaLinea);
+                error_archivo = true;
+                break;
+            }
+
             pagina_instruccion = PC/4;
             desplazamiento = PC%4;
-
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-                
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &listos, &ejecucion, &suspendidos);
+                //cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &listos, &ejecucion, &suspendidos);
+                //calcularPorcentajes_RAM_SWAP(TMM,TMS);
                 PCB *procesoSuspendido = sacarFrente(&ejecucion);
                 guardarContexto(procesoSuspendido, copiaLinea);
                 insertar(&suspendidos, procesoSuspendido);
@@ -926,7 +991,7 @@ int main(){
             if(instJNZ == false){
                 PC++;
             }
-            //i++; // Independientemente si hay JNZ o no. Cuenta lineas totales para comparar correctamente con el PC.
+            
             coma = false; 
             espacio = false;
             if(qua == Q && end == false){
@@ -952,7 +1017,6 @@ int main(){
         }
         mostrarTablas(TMS, TMM, NULL);
         calcularPorcentajes_RAM_SWAP(TMM,TMS);
-        cerrarArch_error(0); // Este nada mas cierra el archivo
         if(mataEjecucion){
             continue;
         }

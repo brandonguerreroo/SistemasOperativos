@@ -55,7 +55,6 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
-            mvprintw(*numLinea,24, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Listo");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
@@ -113,7 +112,7 @@ void imprimir(PCB *lista, int numLista, int *numLinea){
             mvprintw(*numLinea,4, "%d", temp->PID);
             mvprintw(*numLinea,10, "%d", temp->GID);
             mvprintw(*numLinea,16, "%s", temp->nombre_proceso);
-            mvprintw(*numLinea,24, "%d", temp->espera);
+            mvprintw(*numLinea,29, "%d", temp->espera);
             mvprintw(*numLinea,32, "%s","Suspendidos");
             mvprintw(*numLinea,48, "%d", temp->PC);
             mvprintw(*numLinea,56, "%s", temp->IR);
@@ -290,6 +289,29 @@ void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, 
     imprimir(suspendidos, 5, numLineaLista);
     imprimir(terminados, 3, numLineaLista);
 }
+
+int verificarOverflow(char numero[]){
+    int len = strlen(numero);
+    char maximo[] = "2147483647";
+    if(len > 10){
+        return 1;
+    }
+    else if(len == 10){
+        for(int i = 0; i < 10; i++){
+            if(numero[i] == maximo[i]){
+                continue;
+            }
+            else if(numero[i] < maximo[i]){
+                return 0;
+            }
+            else if(numero[i] > maximo[i]){
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 
 void verERROR(){
     mvprintw(numLineaErrorLista,4,"AQUI");

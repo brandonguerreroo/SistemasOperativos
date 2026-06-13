@@ -55,6 +55,8 @@ PCB *buscarPorGID(PCB *lista, int num_GID);
 
 void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista);
 
+int verificarOverflow(char numero[]);
+
 void verERROR();
 
 //paginacion.c

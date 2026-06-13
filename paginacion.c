@@ -64,8 +64,8 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
                     }
                 }
                 for(int i = 0; i < procesoDesalojado->numPaginas; i++){
-                    // Actualizar PCB del proceso desalojado
-                    if ((procesoDesalojado->paginas[i][1]) == reloj){
+                    // Actualizar PCB del proceso cuyo marco es desalojado y comprobar que ese marco si este en RAM 
+                    if (((procesoDesalojado->paginas[i][1]) == reloj) && (procesoDesalojado->paginas[i][0] == 1)){
                         procesoDesalojado->paginas[i][0] = 0;
                         procesoDesalojado->paginas[i][1] = 0;
                         actualizoPCB = true;
@@ -124,11 +124,10 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
     char linea[64];
     int marcoLibre_SWAP;
     int contador = 0;
-    rewind(archivoOrigen); //Como contamos las lineas el puntero quedaba al final
     for(int i = 0; i < (numPaginas); i++){
         marcoLibre_SWAP = buscarMarcoPaginaLibreSWAP(TMS);
         fseek(archivoDestino, marcoLibre_SWAP * 4 * tam_linea, SEEK_SET); // Adelanta el archivo marcoLibre * 4 * 64 bytes desde el inicio
-        while ((fgets(linea, sizeof(linea), archivoOrigen)) != NULL){
+        while (((fgets(linea, sizeof(linea), archivoOrigen)) != NULL)){
             if(i == (numPaginas -1)){   //revisa todo el ultimo marco en busca del END
                 if(strcmp(linea, "END") == 0){
                     linea[3] = '\n';
@@ -136,10 +135,11 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
             }
             size_t len = strlen(linea);
             if (len < 64) {
-                memset(linea + len, '0', 64 - len);
+                memset(linea + len, '-', 64 - len);
             }
             fwrite(linea, sizeof(char), 64, archivoDestino);
             contador++;
+            memset(linea, ' ', 64);
             if(contador == 4){
                 contador = 0;
                 break;
@@ -156,7 +156,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
-    numero_aleatorio = (rand() % 3);
+    numero_aleatorio = (rand() % 4);
     //numero_aleatorio = 2;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
@@ -215,6 +215,7 @@ void calcularPorcentajes_RAM_SWAP(int TMM[][2], int TMS[]){
 
     mvprintw(24,190, "USO RAM:  %.3f %%", usoRAM);
     mvprintw(25,190, "USO SWAP: %.3f %%", usoSWAP);
+    refresh();
 }
 
 void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
@@ -223,14 +224,16 @@ void liberar_marcos_RAM_SWAP(PCB *proceso, int TMM[][2], int TMS[]){
     int entradasTMP;
     entradasTMP = proceso->numPaginas; 
     for(int i = 0 ; i < entradasTMP ; i++){
+        if(proceso->paginas[i][0] == 1){
+            marcoRAM = proceso->paginas[i][1];
+            TMM[marcoRAM][0] = 0;
+            TMM[marcoRAM][1] = 0;
+        }
         proceso->paginas[i][0] = 0;
-        marcoRAM = proceso->paginas[i][1];
-        marcoSWAP = proceso->paginas[i][2];
-        TMM[marcoRAM][0] = 0;
-        TMM[marcoRAM][1] = 0;
-        TMS[marcoSWAP] = 0;    
+        marcoSWAP = proceso->paginas[i][2]; 
+        TMS[marcoSWAP] = 0;  
     }
-
+    calcularPorcentajes_RAM_SWAP(TMM,TMS);
 }
 
 void limpiarTMP(PCB *proceso){
@@ -266,9 +269,9 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
         }
         else{
             memoriaSuficiente = false;
-            mvprintw(numLineaErrorLista,4,"ERROR: memoria virtual insuficiente");
+            mvprintw(numLineaErrorLista,4,"Proceso a nuevos debido a memoria virtual insuficiente");
             refresh();
-            sleep(1);
+            usleep(500000);
             limpiarLinea(numLineaErrorLista);
         }
     }
