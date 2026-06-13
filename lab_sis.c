@@ -60,73 +60,73 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 2:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)", copiaNombre_archivo, PC);//
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 3:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\ttercer argumento invalido, revisa sintaxis", copiaNombre_archivo, PC);//
+            mvprintw(numLineaErrorLista,4,"%s\t%d\ttercer argumento invalido, revisa sintaxis", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 4:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tel segundo argumento no corresponde a un registro valido", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel segundo argumento no corresponde a un registro valido", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 5:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tno se encontro una sentencia END", copiaNombre_archivo, PC);  //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tno se encontro una sentencia END", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 6:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\terror division por 0", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\terror division por 0", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 7:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tinstruccion inicial no valida", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tinstruccion inicial no valida", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 8:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tdemasiados argumentos en sentencia END", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tdemasiados argumentos en sentencia END", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 9:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencias INC o DEC", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencias INC o DEC", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 10:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga  o falta END (revisar archivo)", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga  o falta END (revisar archivo)", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 11:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC no es un numero en instruccion JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC no es un numero en instruccion JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 12:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 13:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC excede el numero de instrucciones del archivo en instruccion JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC excede el numero de instrucciones del archivo en instruccion JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -209,7 +209,7 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
             return 1;
         }
         else{
-            if(verificarOverflow(rv_to) == 1){
+            if(verificarDesbordamiento(rv_to) == 1){
                 cerrarArch_error(15);
                 return 1;
             }
@@ -267,7 +267,7 @@ int JNZ(char reg_to[], bool *instJNZ, PCB *proceso){
             return 1;
         }
     }
-    if(verificarOverflow(reg_to) == 1){
+    if(verificarDesbordamiento(reg_to) == 1){
         cerrarArch_error(16);
         return 1;
     }
@@ -472,7 +472,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
-                if(verificarOverflow(archivo_to) == 1){
+                if(verificarDesbordamiento(archivo_to) == 1){
                     mvprintw(numLineaErrorLista,4,"OVERFLOW en en PID de Mata"); // CAMBIAR checar
                     refresh();
                     sleep(1);
@@ -558,7 +558,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
-                if(verificarOverflow(archivo_to) == 1){
+                if(verificarDesbordamiento(archivo_to) == 1){
                     mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en en PID de Fork"); // CAMBIAR checar
                     refresh();
                     sleep(1);
@@ -583,7 +583,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(noinst_no_number == false){
-                if(verificarOverflow(noinst) == 1){
+                if(verificarDesbordamiento(noinst) == 1){
                     mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en numero de instruccion de Fork"); // CAMBIAR checar
                     refresh();
                     sleep(1);
