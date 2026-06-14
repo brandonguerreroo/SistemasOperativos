@@ -237,7 +237,7 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
     }
     else if(strcmp(inst_to,"ADD") == 0){
         long long valorMaximo = (long long)(*destino) + valor;
-        if(valorMaximo > 2147483647 || valorMaximo < -2147483647){
+        if(valorMaximo > 2147483647 || valorMaximo < -2147483648){
             cerrarArch_error(18);
             return 1;
         }
@@ -245,7 +245,7 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
     }
     else if(strcmp(inst_to,"SUB") == 0){
         long long valorMaximo = (long long)(*destino) - valor;
-        if(valorMaximo > 2147483647 || valorMaximo < -2147483647){
+        if(valorMaximo > 2147483647 || valorMaximo < -2147483648){
             cerrarArch_error(18);
             return 1;
         }
@@ -253,7 +253,7 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
     }
     else if(strcmp(inst_to,"MUL") == 0){
         long long valorMaximo = (long long)(*destino) * valor;
-        if(valorMaximo > 2147483647 || valorMaximo < -2147483647){
+        if(valorMaximo > 2147483647 || valorMaximo < -2147483648){
             cerrarArch_error(18);
             return 1;
         }
@@ -288,7 +288,7 @@ int INC_DEC(char inst_to[], char reg_to[]){
         (*destino)++;
     }
     else if(strcmp(inst_to,"DEC") == 0){
-        if(*destino == -2147483647){
+        if(*destino == -2147483648){
             cerrarArch_error(17);
             return 1;
         }

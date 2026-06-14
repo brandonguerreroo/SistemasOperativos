@@ -293,19 +293,20 @@ void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, 
 int verificarDesbordamiento(char numero[]){
     int len = strlen(numero);
     char maximo[] = "2147483647";
+    char minimo[] = "2147483648";
     if(numero[0] == '-'){
         if(len > 11){
             return 1;
         }
         else if(len == 11){
             for(int i = 0; i < 10; i++){
-                if(numero[i+1] == maximo[i]){
+                if(numero[i+1] == minimo[i]){
                     continue;
                 }
-                else if(numero[i+1] < maximo[i]){
+                else if(numero[i+1] < minimo[i]){
                     return 0;
                 }
-                else if(numero[i+1] > maximo[i]){
+                else if(numero[i+1] > minimo[i]){
                     return 1;
                 }
             }
@@ -314,7 +315,6 @@ int verificarDesbordamiento(char numero[]){
     else if(len > 10){
         return 1;
     }
-
     else if(len == 10){
         for(int i = 0; i < 10; i++){
             if(numero[i] == maximo[i]){
