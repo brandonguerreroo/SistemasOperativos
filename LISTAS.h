@@ -55,7 +55,7 @@ PCB *buscarPorGID(PCB *lista, int num_GID);
 
 void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, PCB *terminados, int *numLineaLista);
 
-int verificarOverflow(char numero[]);
+int verificarDesbordamiento(char numero[]);
 
 void verERROR();
 
@@ -90,6 +90,6 @@ void limpiarTMP(PCB *proceso);
 
 int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]);
 
-PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos);
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos, PCB *ejecucion, FILE *memoriaVirtual, char RAM[], int TMM[][2], int TMS[]);
 
 #endif

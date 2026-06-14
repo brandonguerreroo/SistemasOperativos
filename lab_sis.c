@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "LISTAS.h"
 #include <time.h>
+#include <limits.h>
 
 FILE *memoriaVirtual;
 int EAX = 0; 
@@ -54,19 +55,19 @@ int cerrarArch_error(int num){
    
     switch(num){
         case 1:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a numero mayor de argumentos", copiaNombre_archivo, PC);
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a numero mayor de argumentos", copiaNombre_archivo, PC); 
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 2:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)", copiaNombre_archivo, PC);//
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea invalida debido a uno o varios argumentos nulos (revisa sintaxis)", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 3:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\ttercer argumento invalido, revisa sintaxis", copiaNombre_archivo, PC);//
+            mvprintw(numLineaErrorLista,4,"%s\t%d\ttercer argumento invalido, revisa sintaxis", copiaNombre_archivo, PC); //
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -78,7 +79,7 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 5:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tno se encontro una sentencia END", copiaNombre_archivo, PC);  //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tno se encontro una sentencia END", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -96,37 +97,37 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 8:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tdemasiados argumentos en sentencia END", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tdemasiados argumentos en sentencia END", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 9:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencias INC o DEC", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencias INC o DEC", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 10:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga  o falta END (revisar archivo)", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tlinea de instruccion demasiado larga o falta END (revisar archivo)", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 11:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC no es un numero en instruccion JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC no es un numero en instruccion JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 12:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tsintaxis incorrecta en sentencia JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 13:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC excede el numero de instrucciones del archivo en instruccion JNZ", copiaNombre_archivo, PC); //
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tel PC excede el numero de instrucciones del archivo en instruccion JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
@@ -138,16 +139,27 @@ int cerrarArch_error(int num){
             limpiarLinea(numLineaErrorLista);
             break;
         case 15:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tOVERFLOW en rv_token en instrucciones MOV,ADD,SUB,MUL,DIV", copiaNombre_archivo, PC);
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tDesbordamiento en rv_token en instrucciones MOV,ADD,SUB,MUL,DIV", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
             break;
         case 16:
-            mvprintw(numLineaErrorLista,4,"%s\t%d\tOVERFLOW en numero de instruccion en JNZ", copiaNombre_archivo, PC);
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tOverflow en numero de instruccion en JNZ", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
+        case 17:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tDesbordamiento en sentencias INC o DEC", copiaNombre_archivo, PC);
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+        case 18:
+            mvprintw(numLineaErrorLista,4,"%s\t%d\tDesbordamiento en operaciones ADD, SUB, MUL", copiaNombre_archivo, PC);
+            refresh();
+            sleep(2);
+            limpiarLinea(numLineaErrorLista);
+
     }
     
     return 0;
@@ -209,7 +221,7 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
             return 1;
         }
         else{
-            if(verificarOverflow(rv_to) == 1){
+            if(verificarDesbordamiento(rv_to) == 1){
                 cerrarArch_error(15);
                 return 1;
             }
@@ -221,12 +233,25 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         *destino = valor;
     }
     else if(strcmp(inst_to,"ADD") == 0){
+        if(*destino == 2147483647 && valor >= 0){
+            cerrarArch_error(18);
+            return 1;
+        }
         *destino = *destino + valor;
     }
     else if(strcmp(inst_to,"SUB") == 0){
+        if(*destino == -2147483647 && valor >= 0){
+            cerrarArch_error(18);
+            return 1;
+        }
         *destino = *destino - valor;
     }
     else if(strcmp(inst_to,"MUL") == 0){
+        long long valorMaximo = (long long)(*destino) * valor;
+        if(valorMaximo > 2147483647 || valorMaximo < -2147483647){
+            cerrarArch_error(18);
+            return 1;
+        }
         *destino = *destino * valor;
     }
     else if(strcmp(inst_to,"DIV") == 0){
@@ -251,9 +276,17 @@ int INC_DEC(char inst_to[], char reg_to[]){
     }
     
     if(strcmp(inst_to,"INC") == 0){
+        if(*destino == 2147483647){
+            cerrarArch_error(17);
+            return 1;
+        }
         (*destino)++;
     }
     else if(strcmp(inst_to,"DEC") == 0){
+        if(*destino == -2147483647){
+            cerrarArch_error(17);
+            return 1;
+        }
         (*destino)--;
     }
     
@@ -267,18 +300,17 @@ int JNZ(char reg_to[], bool *instJNZ, PCB *proceso){
             return 1;
         }
     }
-    if(verificarOverflow(reg_to) == 1){
+    if(verificarDesbordamiento(reg_to) == 1){
         cerrarArch_error(16);
         return 1;
     }
     int valor = atoi(reg_to);
- 
-    if(valor > (proceso->numInstrucciones -1)){
-        cerrarArch_error(13);
-        return 1;
-    }
-    
+
     if(ECX != 0){
+        if(valor > (proceso->numInstrucciones -1)){
+            cerrarArch_error(13);
+            return 1;
+        }
         PC = valor;
         *instJNZ = true;
     }
@@ -393,7 +425,14 @@ int matar(int num_PID){
         }
         insertar(&terminados, matar);
         mostrarTablas(TMS,TMM,matar);
-        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargas nuevos
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargar nuevos
+        return 0;
+    }
+    else if((matar = buscar_sacar(&nuevos, num_PID, 0)) != NULL){
+        numeroDeGrupos--;
+        insertar(&terminados, matar);
+        mostrarTablas(TMS,TMM,matar);
+        cargarNuevos(&nuevos,&listos,memoriaVirtual,TMS); // Intentar cargar nuevos
         return 0;
     }
     else{
@@ -465,16 +504,15 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
-                if(verificarOverflow(archivo_to) == 1){
-                    mvprintw(numLineaErrorLista,4,"OVERFLOW en en PID de Mata"); // CAMBIAR checar
+                if(verificarDesbordamiento(archivo_to) == 1){
+                    mvprintw(numLineaErrorLista,4,"OVERFLOW en en PID de Mata");
                     refresh();
                     sleep(1);
                     limpiarLinea(numLineaErrorLista);
                     break;
                 }
                 procesoPID_mata = atoi(archivo_to);
-                if(matar(procesoPID_mata) == 1)
-                {
+                if(matar(procesoPID_mata) == 1){
                     mataEjecucion = true;
                 }
             }
@@ -491,8 +529,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             int numeroDeInstrucciones;
             limpiarLinea(numLineaErrorLista);
             FILE *archivo = fopen(archivo_to, "rb"); //Nos sirve para poder comprobar que el archivo exista
-            if (archivo == NULL) 
-            {
+            if (archivo == NULL){
                 mvprintw(numLineaErrorLista,4,"ERROR: archivo no encontrado."); //Si no existe, marcamos error
                 refresh();
                 sleep(1);
@@ -553,8 +590,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(PID_no_number == false){
-                if(verificarOverflow(archivo_to) == 1){
-                    mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en en PID de Fork"); // CAMBIAR checar
+                if(verificarDesbordamiento(archivo_to) == 1){
+                    mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en en PID de Fork");
                     refresh();
                     sleep(1);
                     limpiarLinea(numLineaErrorLista);
@@ -578,8 +615,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
                 }
             }
             if(noinst_no_number == false){
-                if(verificarOverflow(noinst) == 1){
-                    mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en numero de instruccion de Fork"); // CAMBIAR checar
+                if(verificarDesbordamiento(noinst) == 1){
+                    mvprintw(numLineaErrorLista,4,"Error, OVERFLOW en numero de instruccion de Fork");
                     refresh();
                     sleep(1);
                     limpiarLinea(numLineaErrorLista);
@@ -590,15 +627,7 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
             else{
                 break;
             }
-            int i = 0;
             PCB *nodoCopiar;
-            /*if(numeroDeInstruccion < 0){
-                mvprintw(numLineaErrorLista,4,"Error, numero de instruccion MUY grande"); // CAMBIAR checar
-                refresh();
-                sleep(1);
-                limpiarLinea(numLineaErrorLista);
-                break;
-            }*/
             if(((nodoCopiar = buscar_sacar(&ejecucion, procesoPID_fork, 1)) != NULL)){
                 if(nodoCopiar->numInstrucciones > numeroDeInstruccion){
                     PID++;
@@ -754,7 +783,8 @@ int main(){
         
         mvprintw(0,4," ");
         refresh();
-        //sleep(1);
+        
+
         limpiar();
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         if(ejecuta == false){
@@ -767,12 +797,13 @@ int main(){
         end = false;        //debe volver a falso
         cortar = false;
 
-
         if(ejecucion.sig == NULL){
             while(suspendidos.sig != NULL){
-                PCB *nodo = sacarSuspendidos(&suspendidos, &listos);
+                PCB *nodo = sacarSuspendidos(&suspendidos,&listos,&ejecucion,memoriaVirtual,RAM, TMM, TMS);
+                
                 if(nodo != NULL){
                     insertar(&listos, nodo);
+                    mostrarTablas(TMS, TMM, nodo);
                 }
                 else{
                     break;
@@ -803,18 +834,12 @@ int main(){
         //Imprimir cada que cambie el que esta en ejecucion 
         limpiar();
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
+
         int qua = 0;
         entrar = false;
         mataEjecucion = false;
         instJNZ = false;
         while (salir == false){
-            /*if(entrar == false || instJNZ == true){ // Tambien se debe de adelantar cuando haya instruccion JNZ valida.
-                if(i < PC){
-                    i++;
-                    continue;
-                }
-                entrar = true;
-            }*/
             if((PC > (nodo_a_ejecutar->numInstrucciones - 1))){
                 cerrarArch_error(14);
                 meterEnTerminados(copiaLinea);
@@ -825,15 +850,12 @@ int main(){
             pagina_instruccion = PC/4;
             desplazamiento = PC%4;
             if((nodo_a_ejecutar->paginas[pagina_instruccion][0]) == 0){
-                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, nodo_a_ejecutar, pagina_instruccion, &listos, &ejecucion, &suspendidos);
-                calcularPorcentajes_RAM_SWAP(TMM,TMS);
                 PCB *procesoSuspendido = sacarFrente(&ejecucion);
                 guardarContexto(procesoSuspendido, copiaLinea);
                 insertar(&suspendidos, procesoSuspendido);
                 guardarTiempos(procesoSuspendido);
                 limpiar();
                 imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista); // Imprimir cada que se mande a suspendidos
-        
                 entroSuspendidos = true;
                 break;
             }
@@ -1031,14 +1053,12 @@ int main(){
             cerrarArch_error(5);  
             continue;
         }
-        //imprimirTMM(TMM);
     }
     endwin();    
     if (memoriaVirtual != NULL){
         fclose(memoriaVirtual);
         memoriaVirtual = NULL;
     }
-    //imprimirTMM(TMM);
     return 0;
 }
 

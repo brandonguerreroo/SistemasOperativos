@@ -290,12 +290,31 @@ void imprimirListas(PCB *ejecucion, PCB *listos, PCB *nuevos, PCB *suspendidos, 
     imprimir(terminados, 3, numLineaLista);
 }
 
-int verificarOverflow(char numero[]){
+int verificarDesbordamiento(char numero[]){
     int len = strlen(numero);
     char maximo[] = "2147483647";
-    if(len > 10){
+    if(numero[0] == '-'){
+        if(len > 11){
+            return 1;
+        }
+        else if(len == 11){
+            for(int i = 0; i < 10; i++){
+                if(numero[i+1] == maximo[i]){
+                    continue;
+                }
+                else if(numero[i+1] < maximo[i]){
+                    return 0;
+                }
+                else if(numero[i+1] > maximo[i]){
+                    return 1;
+                }
+            }
+        }
+    }
+    else if(len > 10){
         return 1;
     }
+
     else if(len == 10){
         for(int i = 0; i < 10; i++){
             if(numero[i] == maximo[i]){
@@ -311,7 +330,6 @@ int verificarOverflow(char numero[]){
     }
     return 0;
 }
-
 
 void verERROR(){
     mvprintw(numLineaErrorLista,4,"AQUI");

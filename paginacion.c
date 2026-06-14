@@ -52,7 +52,7 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
     while(1){
         if(TMM[reloj][1] == 0){
             GID_proceso_desalojado = TMM[reloj][0];
-            if(GID_proceso_desalojado != 0){
+            if(GID_proceso_desalojado > 0){
                 if( (procesoDesalojado = buscarPorGID(ejecucion, GID_proceso_desalojado)) == NULL ){
                     if( (procesoDesalojado = buscarPorGID(listos, GID_proceso_desalojado)) == NULL ){
                         if( (procesoDesalojado = buscarPorGID(suspendidos, GID_proceso_desalojado)) == NULL ){
@@ -156,7 +156,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
-    numero_aleatorio = (rand() % 4);
+    numero_aleatorio = (rand() % 2);
     //numero_aleatorio = 2;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
@@ -278,11 +278,11 @@ int cargarNuevos(PCB *nuevos, PCB *listos, FILE *memoriaVirtual, int TMS[]){
     return 1;
 }
 
-PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos){
+PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos, PCB *ejecucion, FILE *memoriaVirtual, char RAM[], int TMM[][2], int TMS[]){
     
     time_t diferencia;
     time_t tiempo_actual;
-
+    int pagina_instruccion;
     PCB *temp1 = suspendidos;
     PCB *temp2 = suspendidos->sig;
 
@@ -290,6 +290,11 @@ PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos){
         time(&tiempo_actual); 
         diferencia = tiempo_actual - temp2->tiempo_de_salida;
         if(diferencia >= (time_t)temp2->espera){
+            pagina_instruccion = temp2->PC/4;
+            if((temp2->paginas[pagina_instruccion][0]) == 0){
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, temp2, pagina_instruccion, listos, ejecucion, suspendidos);
+                calcularPorcentajes_RAM_SWAP(TMM,TMS);
+            }
             temp1->sig = temp2->sig;
             temp2->sig = NULL;
             return temp2;
