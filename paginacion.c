@@ -60,6 +60,10 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
                             refresh();
                             sleep(1);
                             limpiarLinea(numLineaErrorLista);
+
+                            TMM[reloj][0] = 0; 
+                            TMM[reloj][1] = 0;
+                            continue;
                         }
                     }
                 }
@@ -131,10 +135,14 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
             if(i == (numPaginas -1)){   //revisa todo el ultimo marco en busca del END
                 if(linea[0] == 'J'  &&  linea[1] == 'N'  && linea[2] == 'Z'){
                     size_t len_JNZ = strlen(linea);
-                    linea[len_JNZ] = '\n';
+                    if(len_JNZ < 63){
+                        linea[len_JNZ] = '\n';
+                        linea[len_JNZ + 1] = '\0';
+                    }
                 }
                 if(strcmp(linea, "END") == 0){
                     linea[3] = '\n';
+                    linea[4] = '\0';
                 }
             }
             size_t len = strlen(linea);
