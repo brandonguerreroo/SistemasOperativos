@@ -52,17 +52,10 @@ int algoritmo_reloj(int TMM[][2], PCB *listos, PCB *ejecucion, PCB *suspendidos)
     while(1){
         if(TMM[reloj][1] == 0){
             GID_proceso_desalojado = TMM[reloj][0];
-            //mvprintw(5,10,"%d", GID_proceso_desalojado);
-            //refresh();
-            //sleep(2);
             if(GID_proceso_desalojado > 0){
-                
                 if( (procesoDesalojado = buscarPorGID(ejecucion, GID_proceso_desalojado)) == NULL ){
                     if( (procesoDesalojado = buscarPorGID(listos, GID_proceso_desalojado)) == NULL ){
                         if( (procesoDesalojado = buscarPorGID(suspendidos, GID_proceso_desalojado)) == NULL ){
-                            mvprintw(5,10,"%d", GID_proceso_desalojado);
-                            refresh();
-                            sleep(2);
                             mvprintw(numLineaErrorLista,4,"ERROR de TMM. No se encuentra en ninguna lista.");
                             refresh();
                             sleep(1);
@@ -298,8 +291,10 @@ PCB *sacarSuspendidos(PCB *suspendidos, PCB *listos, PCB *ejecucion, FILE *memor
         diferencia = tiempo_actual - temp2->tiempo_de_salida;
         if(diferencia >= (time_t)temp2->espera){
             pagina_instruccion = temp2->PC/4;
-            cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, temp2, pagina_instruccion, listos, ejecucion, suspendidos);
-            calcularPorcentajes_RAM_SWAP(TMM,TMS);
+            if((temp2->paginas[pagina_instruccion][0]) == 0){
+                cargar_a_memoria_RAM(memoriaVirtual, RAM, TMM, temp2, pagina_instruccion, listos, ejecucion, suspendidos);
+                calcularPorcentajes_RAM_SWAP(TMM,TMS);
+            }
             temp1->sig = temp2->sig;
             temp2->sig = NULL;
             return temp2;
