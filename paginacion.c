@@ -129,6 +129,10 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
         fseek(archivoDestino, marcoLibre_SWAP * 4 * tam_linea, SEEK_SET); // Adelanta el archivo marcoLibre * 4 * 64 bytes desde el inicio
         while (((fgets(linea, sizeof(linea), archivoOrigen)) != NULL)){
             if(i == (numPaginas -1)){   //revisa todo el ultimo marco en busca del END
+                if(linea[0] == 'J'  &&  linea[1] == 'N'  && linea[2] == 'Z'){
+                    size_t len_JNZ = strlen(linea);
+                    linea[len_JNZ] = '\n';
+                }
                 if(strcmp(linea, "END") == 0){
                     linea[3] = '\n';
                 }
@@ -157,7 +161,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
     numero_aleatorio = (rand() % 2);
-    numero_aleatorio = 1;
+    numero_aleatorio = 0;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }

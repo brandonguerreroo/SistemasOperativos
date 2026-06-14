@@ -236,14 +236,16 @@ int MOV_ADD_SUB_MUL_DIV(char inst_to[], char reg_to[], char rv_to[]){
         *destino = valor;
     }
     else if(strcmp(inst_to,"ADD") == 0){
-        if(*destino == 2147483647 && valor >= 0){
+        long long valorMaximo = (long long)(*destino) + valor;
+        if(valorMaximo > 2147483647 || valorMaximo < -2147483647){
             cerrarArch_error(18);
             return 1;
         }
         *destino = *destino + valor;
     }
     else if(strcmp(inst_to,"SUB") == 0){
-        if(*destino == -2147483647 && valor >= 0){
+        long long valorMaximo = (long long)(*destino) - valor;
+        if(valorMaximo > 2147483647 || valorMaximo < -2147483647){
             cerrarArch_error(18);
             return 1;
         }
