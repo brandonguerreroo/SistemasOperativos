@@ -157,7 +157,7 @@ void cargar_a_memoria_virtual(FILE *archivoOrigen, FILE *archivoDestino, int num
 void guardarTiempos(PCB *procesoSuspendido){
     int numero_aleatorio = (rand() % 9) + 2;
     numero_aleatorio = (rand() % 2);
-    //numero_aleatorio = 2;
+    numero_aleatorio = 1;
     time(&procesoSuspendido->tiempo_de_salida);
     procesoSuspendido->espera = numero_aleatorio;
 }

@@ -149,16 +149,19 @@ int cerrarArch_error(int num){
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
+            break;
         case 17:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tDesbordamiento en sentencias INC o DEC", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
+            break;
         case 18:
             mvprintw(numLineaErrorLista,4,"%s\t%d\tDesbordamiento en operaciones ADD, SUB, MUL", copiaNombre_archivo, PC);
             refresh();
             sleep(2);
             limpiarLinea(numLineaErrorLista);
+            break;
 
     }
     
@@ -466,7 +469,8 @@ void ciclo_kbhit(bool *cortar, char nombre_archivo[], bool *salir, bool *ejecuta
 
         if(kbhit()){
             limpiarLinea(numLineaComando);
-            mvscanw(numLineaComando,4,"%49[^\n]",cad);
+            mvgetnstr(numLineaComando, 4, cad, sizeof(cad) - 1);
+            //mvscanw(numLineaComando,4,"%49[^\n]",cad);
         }
         else{
             cad[0] = '\0';
@@ -784,7 +788,9 @@ int main(){
         mvprintw(0,4," ");
         refresh();
         
-
+        mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos); // QUITAR
+        refresh();
+        
         limpiar();
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         if(ejecuta == false){
@@ -892,7 +898,6 @@ int main(){
             linea[strcspn(linea, "\n")] = '\0';  // Eliminar el salto de línea si existe
             strncpy(copiaLinea, linea, sizeof(copiaLinea) - 1);
             copiaLinea[sizeof(copiaLinea)-1] = '\0';
-            //imprimirTMM(TMM);
             mvprintw(numFilaEjecucion,16,"%s",linea);
             refresh();
 
@@ -998,9 +1003,9 @@ int main(){
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
-            //mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos);
+            mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos); // QUITAR
             refresh();
-            usleep(50000);
+            //usleep(50000);
             if(instJNZ == false){
                 PC++;
             }
