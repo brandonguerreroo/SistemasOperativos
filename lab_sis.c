@@ -790,9 +790,6 @@ int main(){
         mvprintw(0,4," ");
         refresh();
         
-        mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos); // QUITAR
-        refresh();
-        
         limpiar();
         imprimirListas(&ejecucion, &listos, &nuevos, &suspendidos, &terminados, &numLineaLista);
         if(ejecuta == false){
@@ -1005,7 +1002,6 @@ int main(){
             mvprintw(numFilaEjecucion,80,"%d",EDX);
             mvprintw(numFilaEjecucion,90,"%d",CPU_temp);
             mvprintw(numFilaEjecucion,100,"%d",GCPU_temp);
-            mvprintw(numFilaEjecucion,115, "%d", numeroDeGrupos); // QUITAR
             refresh();
             //usleep(50000);
             if(instJNZ == false){
